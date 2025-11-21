@@ -1,0 +1,61 @@
+﻿@model List<WebApi.Infrastructure.Models.DTO.ThemeDto>
+
+@{
+    ViewBag.Title = "Темы";
+    Layout = "_MasterPage";
+}
+
+<h2>Темы</h2>
+
+<style>
+    .theme-item {
+        border: 1px solid #ccc;
+        margin-bottom: 8px;
+        padding: 10px;
+        background-color: #f9f9f9;
+        position: relative;
+    }
+
+    .theme-item:hover {
+        background-color: #e9e9e9;
+    }
+
+    .theme-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .btn {
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 3px;
+        border: none;
+        color: white;
+        background-color: #0275d8;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 8px;
+    }
+
+    .btn-add-theme {
+        background-color: #5cb85c;
+        margin-bottom: 15px;
+    }
+</style>
+
+<a href="@Url.Action("AddTheme", "Admin")" class="btn btn-add-theme">Добавить тему</a>
+
+<div id="themes-container">
+    @foreach (var theme in Model)
+    {
+        <div class="theme-item">
+            <a class="theme-link" href="@Url.Action("Tasks", "Admin", new { themeId = theme.Id })">
+                <strong>@theme.Title</strong>
+                <p>@theme.Description</p>
+            </a>
+            <a href="@Url.Action("AddLesson", "Admin", new { themeId = theme.Id })" class="btn">Добавить материал к теме</a>
+            <a href="@Url.Action("AddTask", "Admin", new { themeId = theme.Id })" class="btn" style="margin-left:10px;">Добавить задание к теме</a>
+        </div>
+    }
+</div>

@@ -1,0 +1,93 @@
+﻿@model WebApi.Infrastructure.Models.DTO.LessonDto
+
+@{
+    ViewBag.Title = "Добавить материал к теме";
+    Layout = "_MasterPage";
+}
+
+<style>
+    form.custom-form {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 25px;
+        background-color: #f9f9f9;
+        border-radius: 12px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        font-family: sans-serif;
+    }
+
+    .custom-form h2 {
+        margin-bottom: 20px;
+        text-align: center;
+        color: #333;
+    }
+
+    .custom-form label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #444;
+    }
+
+    .custom-form input[type="url"],
+    .custom-form textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        transition: border-color 0.2s;
+    }
+
+    .custom-form input:focus,
+    .custom-form textarea:focus {
+        border-color: #007bff;
+        outline: none;
+    }
+
+    .custom-form button,
+    .custom-form a.btn-cancel {
+        display: inline-block;
+        padding: 10px 20px;
+        border: none;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    .custom-form button {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .custom-form button:hover {
+        background-color: #0056b3;
+    }
+
+    .custom-form a.btn-cancel {
+        background-color: #ccc;
+        color: #333;
+        margin-left: 10px;
+    }
+
+    .custom-form a.btn-cancel:hover {
+        background-color: #aaa;
+    }
+</style>
+
+<form method="post" asp-action="AddLesson" asp-controller="Admin" class="custom-form">
+    <h2>Добавить материал к теме ID: @Model.ThemeId</h2>
+
+    <input type="hidden" name="ThemeId" value="@Model.ThemeId" />
+
+    <label for="Text">Текст урока</label>
+    <textarea id="Text" name="Text" rows="4" required></textarea>
+
+    <label for="Link">Ссылка (необязательно)</label>
+    <input type="url" id="Link" name="Link" />
+
+    <button type="submit">Добавить материал</button>
+    <a href="@Url.Action("Index", "Admin")" class="btn-cancel">Отмена</a>
+</form>

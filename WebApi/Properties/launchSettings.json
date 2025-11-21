@@ -1,0 +1,32 @@
+﻿{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:63604",
+      "sslPort": 44329
+    }
+  },
+  "profiles": {
+    "BeautySchools.Backend": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "CONNECTION_STRING": "Server=localhost;Port=5434;Database=xamarinDb;Username=postgres;Password=12345",
+        "ADMIN_LOGIN": "admin",
+        "ADMIN_PASSWORD": "123",
+        "JWT_SECRET": "your-very-secret-key123456789011"
+      }
+    },
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": false,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "DATABASE_CONNECTION": "Development"
+      }
+    }
+  }
+}
