@@ -194,4 +194,21 @@ public class ClientController(ClientService service) : ControllerBase
             return StatusCode(500, e.Message);
         }
     }
+
+    [HttpGet]
+    public async Task<ActionResult<List<ThemesStatistic>>> GetStatisticForTheme()
+    {
+        try
+        {
+            var username = User.FindFirst("username")?.Value;
+            
+            var statistic = await service.GetStatisticForThemes(username);
+            
+            return StatusCode(200, statistic);
+        }
+        catch (Exception exception)
+        {
+            return StatusCode(500, exception.Message);
+        }
+    }
 }

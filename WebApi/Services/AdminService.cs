@@ -239,4 +239,37 @@ public class AdminService(DataComponent component, IWebHostEnvironment env)
         
         return fileBytes;
     }
+    
+    public async Task<List<ThemesStatistic>> GetThemeStatisticForUser(int userId)
+    {
+        var tasks = await component.Tasks
+            .Include(t => t.Theme)
+            .ToListAsync();
+        var completedTasks = await component.CompletedTasks
+            .Where(x => x.UserId == userId)
+            .ToDictionaryAsync(x => x.TaskId, x => x.IsCorrect == true);
+
+        var statistic =  tasks
+            .GroupBy(t => new {t.ThemeId, t.Theme.Title})
+            .ToDictionary(g => g.Key, g =>
+            {
+                var total = g.Count();
+                var solved = g.Count(t => completedTasks.ContainsKey(t.Id));
+                var solvedCorrect = g.Count(t => completedTasks.TryGetValue(t.Id, out var cor) && cor);
+                
+                var solvedPercent = total == 0 ? 0.0 : (double)solved / total * 100;
+                var correctPercent = solved == 0 ? 0.0 : (double)solvedCorrect / solved * 100;
+                
+                return new ThemesStatistic
+                {
+                    SolvedPercent = solvedPercent,
+                    SolvedCorrectPercent = correctPercent,
+                    ThemeId = g.Key.ThemeId,
+                    ThemeName = g.Key.Title
+                };
+            });
+        
+        return statistic.Values.ToList();
+    }
+
 }
