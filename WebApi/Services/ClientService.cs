@@ -3,6 +3,7 @@ using WebApi.Infrastructure.Components;
 using WebApi.Infrastructure.Models.DTO;
 using WebApi.Infrastructure.Models.Requests;
 using WebApi.Infrastructure.Models.Storage;
+using Task = System.Threading.Tasks.Task;
 
 namespace WebApi.Services;
 
@@ -51,7 +52,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
 
         return tasks.Select(t =>
         {
-            var completedTask = completed.FirstOrDefault(ct => ct.TaskForTestId == t.Id);
+            var completedTask = completed.FirstOrDefault(ct => ct.TaskId == t.Id);
 
             return new TaskForClientDto
             {
@@ -98,12 +99,12 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             .Where(t => t.TestId == testId)
             .Select(t => new TaskForClientDto()
             {
-                Id = t.TaskForTestId,
-                Text = t.TaskForTest.Text,
+                Id = t.TaskId,
+                Text = t.Task.Text,
                 CorrectAnswer = "",
-                DifficultyLevel = t.TaskForTest.DifficultyLevel,
-                File = t.TaskForTest.FilePath,
-                Image = t.TaskForTest.ImageData,
+                DifficultyLevel = t.Task.DifficultyLevel,
+                File = t.Task.FilePath,
+                Image = t.Task.ImageData,
             })
             .ToListAsync();
     }
@@ -191,7 +192,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         if (task == null) return false;
 
         var existing = await component.CompletedTasks
-            .FirstOrDefaultAsync(ct => ct.UserId == answer.UserId && ct.TaskForTestId == answer.TaskId);
+            .FirstOrDefaultAsync(ct => ct.UserId == answer.UserId && ct.TaskId == answer.TaskId);
 
         var isCorrect = task.CorrectAnswer == answer.Answer;
 
@@ -204,7 +205,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         {
             var completedTaskToAdd = new CompletedTask
             {
-                TaskForTestId = answer.TaskId,
+                TaskId = answer.TaskId,
                 UserId = answer.UserId,
                 IsCorrect = isCorrect
             };
@@ -259,7 +260,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             
             var completedTasksIds = await component.CompletedTasks
                 .Where(t => t.UserId == request.UserId && t.IsCorrect == true)
-                .Select(t => t.TaskForTestId)
+                .Select(t => t.TaskId)
                 .ToListAsync();
 
             var desiredTaskAmount = Math.Min(request.DesiredTasksAmount[themeId], tasks.Count);

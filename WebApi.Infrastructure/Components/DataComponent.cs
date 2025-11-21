@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WebApi.Infrastructure.Models.Storage;
+using Task = WebApi.Infrastructure.Models.Storage.Task;
 
 namespace WebApi.Infrastructure.Components;
 
@@ -12,7 +13,7 @@ public class DataComponent(string connectionString)
     public IQueryable<TestTask> TestTasks => new DatabaseContext(connectionString).TestTasks;
     public IQueryable<Theme> Themes => new DatabaseContext(connectionString).Themes;
     public IQueryable<Test> Tests => new DatabaseContext(connectionString).Tests;
-    public IQueryable<TaskForTest> Tasks => new DatabaseContext(connectionString).Tasks;
+    public IQueryable<Task> Tasks => new DatabaseContext(connectionString).Tasks;
     public IQueryable<UserDevice> UserDevices => new DatabaseContext(connectionString).UserDevices;
     public async Task<bool> Insert<T>(T entityItem) where T : class
     {

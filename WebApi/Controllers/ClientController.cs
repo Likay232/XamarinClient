@@ -4,12 +4,12 @@ using WebApi.Infrastructure.Models.DTO;
 using WebApi.Infrastructure.Models.Requests;
 using WebApi.Infrastructure.Models.Storage;
 using WebApi.Services;
+using Task = WebApi.Infrastructure.Models.Storage.Task;
 
 namespace WebApi.Controllers;
 
 [ApiController]
 [Route("[controller]/[action]")]
-[Authorize(Policy = "NotBlocked")]
 public class ClientController(ClientService service) : ControllerBase
 {
     [HttpPost]
@@ -116,7 +116,7 @@ public class ClientController(ClientService service) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<TaskForTest>> GetTaskById(int taskId)
+    public async Task<ActionResult<Task>> GetTaskById(int taskId)
     {
         try
         {

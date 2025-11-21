@@ -3,6 +3,7 @@ using WebApi.Infrastructure.Components;
 using WebApi.Infrastructure.Models.DTO;
 using WebApi.Infrastructure.Models.Requests;
 using WebApi.Infrastructure.Models.Storage;
+using Task = WebApi.Infrastructure.Models.Storage.Task;
 
 namespace WebApi.Services;
 
@@ -111,7 +112,7 @@ public class AdminService(DataComponent component, IWebHostEnvironment env)
         if (!component.Themes.Any(t => t.Id == taskToAdd.ThemeId))
             throw new Exception("Тема с таким Id не найдена.");
         
-        var newTask = new TaskForTest
+        var newTask = new Task
         {
             ThemeId = taskToAdd.ThemeId,
             Text = taskToAdd.Text,
@@ -146,7 +147,7 @@ public class AdminService(DataComponent component, IWebHostEnvironment env)
 
     public async Task<bool> DeleteTaskForTheme(int taskId)
     {
-        return await component.Delete<TaskForTest>(taskId);
+        return await component.Delete<Task>(taskId);
     }
 
     public async Task<bool> AddLessonForTheme(LessonDto lessonToAdd)
@@ -195,7 +196,7 @@ public class AdminService(DataComponent component, IWebHostEnvironment env)
             var result = await component.Insert(new TestTask
             {
                 TestId = newTest.Id,
-                TaskForTestId = taskId
+                TaskId = taskId
             });
 
             if (!result)

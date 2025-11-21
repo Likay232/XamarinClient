@@ -1,6 +1,6 @@
 ﻿namespace WebApi.Infrastructure.Models.Storage;
 
-public class TaskForTest : BaseEntity
+public class Task : BaseEntity
 {
     public string Text { get; set; } = string.Empty;
     public string CorrectAnswer { get; set; } = string.Empty;

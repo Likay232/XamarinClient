@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WebApi.Infrastructure.Models.Storage;
+using Task = WebApi.Infrastructure.Models.Storage.Task;
 
 namespace WebApi.Infrastructure.Components;
 
@@ -28,7 +29,7 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<Theme>().ToTable("themes");
         modelBuilder.Entity<TestTask>().ToTable("test_tasks");
         modelBuilder.Entity<Test>().ToTable("tests");
-        modelBuilder.Entity<TaskForTest>().ToTable("tasks");
+        modelBuilder.Entity<Task>().ToTable("tasks");
         modelBuilder.Entity<Progress>().ToTable("progresses");
         modelBuilder.Entity<Lesson>().ToTable("lessons");
         modelBuilder.Entity<CompletedTask>().ToTable("completed_tasks");
@@ -41,7 +42,7 @@ public class DatabaseContext : DbContext
     public DbSet<Lesson> Lessons { get; set; }
     public DbSet<CompletedTask> CompletedTasks { get; set; }
     public DbSet<Progress> Progresses { get; set; }
-    public DbSet<TaskForTest> Tasks { get; set; }
+    public DbSet<Task> Tasks { get; set; }
     public DbSet<Test> Tests { get; set; }
     
     public DbSet<UserDevice> UserDevices { get; set; }
