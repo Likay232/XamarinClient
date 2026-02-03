@@ -145,7 +145,8 @@ public class AdminService(DataComponent component, IWebHostEnvironment env)
             CorrectAnswer = taskToAdd.CorrectAnswer,
             DifficultyLevel = taskToAdd.DifficultyLevel,
             FilePath = taskToAdd.FilePath,
-            AnswerVariants = JsonConvert.SerializeObject(taskToAdd.AnswerVariants),
+            AnswerVariants = 
+                JsonConvert.SerializeObject(taskToAdd.AnswerVariants.FindAll(variant => variant is not null)),
             Hint = taskToAdd.Hint
         };
 

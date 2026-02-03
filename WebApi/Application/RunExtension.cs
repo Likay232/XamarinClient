@@ -120,7 +120,6 @@ public static class RunExtension
             context.Response.Redirect("/AuthMvc/Login");
             return Task.CompletedTask;
         });
-
     }
 
     public static void RegistrationEndpoints(this WebApplicationBuilder builder)

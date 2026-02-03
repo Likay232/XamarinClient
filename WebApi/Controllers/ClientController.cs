@@ -1,9 +1,8 @@
 ﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Infrastructure.Models.DTO;
+using WebApi.Infrastructure.Models.Enums;
 using WebApi.Infrastructure.Models.Requests;
-using WebApi.Infrastructure.Models.Storage;
 using WebApi.Services;
 using Task = WebApi.Infrastructure.Models.Storage.Task;
 
@@ -13,6 +12,21 @@ namespace WebApi.Controllers;
 [Route("[controller]/[action]")]
 public class ClientController(ClientService service) : ControllerBase
 {
+    [HttpGet]
+    public async Task<ActionResult<ProfileInfo>> GetProfileInfo([FromQuery] int userId)
+    {
+        try
+        {
+            var profileInfo = await service.GetProfileInfo(userId);
+        
+            return StatusCode(200,  profileInfo);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
+    
     [HttpPost]
     public async Task<ActionResult<bool>> RegisterDevice(RegisterDevice request)
     {
@@ -170,18 +184,33 @@ public class ClientController(ClientService service) : ControllerBase
         }
     }
     
-    // [HttpPost]
-    // public async Task<ActionResult<List<TaskForClientDto>>> GenerateTest(GenerateTest request)
-    // {
-    //     try
-    //     {
-    //         return StatusCode(200, await service.GenerateTest(request));
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         return StatusCode(500, e.Message);
-    //     }
-    // }
+    [HttpGet]
+    public async Task<ActionResult<TestForClientDto>> GenerateTest(TestTypes testType, int themeId, int userId)
+    {
+        try
+        {
+            return StatusCode(200, await service.GenerateTest(testType, themeId, userId));
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    [HttpPost]
+    public async Task<ActionResult<TestForClientDto>> SaveAnswer(int userId, int taskId, bool isCorrect)
+    {
+        try
+        {
+            await service.SaveAnswer(userId, taskId, isCorrect);
+            
+            return StatusCode(200, true);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
 
     [HttpGet]
     public async Task<ActionResult<byte[]>> GetFileBytes(string fileName)

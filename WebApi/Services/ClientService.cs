@@ -575,6 +575,9 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         if (!component.Tasks.Any(t => t.Id == taskId))
             throw new Exception($"Не найдено задание с id {taskId}");
         
+        if (!component.Users.Any(u => u.Id == userId))
+            throw new Exception($"Не найден пользователь с id {userId}");
+        
         var completedTask = new CompletedTask()
         {
             UserId = userId,

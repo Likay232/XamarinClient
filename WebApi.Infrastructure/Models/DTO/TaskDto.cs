@@ -15,9 +15,6 @@ public class TaskDto
     public string Hint { get; set; } = string.Empty;
     
     public int DifficultyLevel { get; set; }
-
     public IFormFile? Image { get; set; }   
-
-    public byte[]? ImageData { get; set; }
     public string? FilePath { get; set; }
 }

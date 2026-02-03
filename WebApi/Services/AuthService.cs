@@ -65,7 +65,7 @@ public class AuthService(DataComponent component)
 
         if (user != null)
             throw new Exception("Имя пользователя занято.");
-
+    
         var newUser = new User
         {
             FirstName = request.FirstName,
