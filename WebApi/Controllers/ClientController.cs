@@ -115,20 +115,20 @@ public class ClientController(ClientService service) : ControllerBase
         }
     }
 
-    [HttpPost]
-    public async Task<ActionResult<List<TaskForClientDto>>> CheckTest(TestForCheck request)
-    {
-        try
-        {
-            var checkedTest = await service.CheckTest(request);
-
-            return StatusCode(200, checkedTest);
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
-        }
-    }
+    // [HttpPost]
+    // public async Task<ActionResult<List<TaskForClientDto>>> CheckTest(TestForCheck request)
+    // {
+    //     try
+    //     {
+    //         var checkedTest = await service.CheckTest(request);
+    //
+    //         return StatusCode(200, checkedTest);
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         return StatusCode(500, e.Message);
+    //     }
+    // }
 
     [HttpGet]
     public async Task<ActionResult<Task>> GetTaskById(int taskId)
@@ -158,18 +158,18 @@ public class ClientController(ClientService service) : ControllerBase
         }
     }
 
-    [HttpPost]
-    public async Task<ActionResult<bool>> CheckTask(CheckTask answer)
-    {
-        try
-        {
-            return StatusCode(200, await service.CheckTask(answer));
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
-        }
-    }
+    // [HttpPost]
+    // public async Task<ActionResult<bool>> CheckTask(CheckTask answer)
+    // {
+    //     try
+    //     {
+    //         return StatusCode(200, await service.CheckTask(answer));
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         return StatusCode(500, e.Message);
+    //     }
+    // }
 
     [HttpPost]
     public async Task<ActionResult<bool>> ChangePassword(ChangePasswordClient request)
@@ -196,6 +196,19 @@ public class ClientController(ClientService service) : ControllerBase
             return StatusCode(500, e.Message);
         }
     }
+
+    [HttpGet]
+    public async Task<ActionResult> GetTaskAmount()
+    {
+        try
+        {
+            return StatusCode(200, await service.GetTaskAmount());
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
     
     [HttpPost]
     public async Task<ActionResult<TestForClientDto>> SaveAnswer(int userId, int taskId, bool isCorrect)
@@ -203,6 +216,21 @@ public class ClientController(ClientService service) : ControllerBase
         try
         {
             await service.SaveAnswer(userId, taskId, isCorrect);
+            
+            return StatusCode(200, true);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    [HttpPost]
+    public async Task<ActionResult<TestForClientDto>> SaveAnswers(SaveAnswers request)
+    {
+        try
+        {
+            await service.SaveAnswers(request);
             
             return StatusCode(200, true);
         }

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EFCore.BulkExtensions;
+using Microsoft.EntityFrameworkCore;
 using WebApi.Infrastructure.Models.Storage;
 using Task = WebApi.Infrastructure.Models.Storage.Task;
 
@@ -67,6 +68,20 @@ public class DataComponent(string connectionString)
             context.Entry(entityItem).State = EntityState.Modified;
             context.Update(entityItem);
             await context.SaveChangesAsync();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> BulkUpdateAsync<T>(List<T> entities) where T : class
+    {
+        try
+        {
+            await using var context = new DatabaseContext(connectionString);
+            await context.BulkUpdateAsync(entities);
             return true;
         }
         catch

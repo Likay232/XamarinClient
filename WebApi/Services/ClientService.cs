@@ -117,53 +117,53 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             .ToListAsync();
     }
 
-    public async Task<CheckedTest> CheckTest(TestForCheck test)
-    {
-        var wrongTasks = new List<WrongTask>();
-
-        foreach (var userAnswer in test.Answers)
-        {
-            var isCorrect = await CheckTask(new CheckTask
-            {
-                TaskId = userAnswer.TaskId,
-                UserId = test.UserId,
-                Answer = userAnswer.Answer
-            });
-
-            if (!isCorrect)
-            {
-                var task = await component.Tasks.FirstOrDefaultAsync(t => t.Id == userAnswer.TaskId);
-
-                wrongTasks.Add(new WrongTask
-                {
-                    Text = task != null ? task.Text : "",
-                    FilePath = task?.FilePath,
-                    Answer = userAnswer.Answer,
-                });
-            }
-        }
-
-        var score = $"{test.Answers.Count - wrongTasks.Count} / {test.Answers.Count}";
-
-        if (test.IsExam)
-        {
-            var testUser = new TestUser
-            {
-                UserId = test.UserId,
-                TestId = test.TestId,
-                CompletionDate = DateTime.Now,
-                Score = score
-            };
-            
-            await component.Insert(testUser);
-        }
-        
-        return new CheckedTest
-        {
-            WrongTasks = wrongTasks,
-            Score = score
-        };
-    }
+    // public async Task<CheckedTest> CheckTest(TestForCheck test)
+    // {
+    //     var wrongTasks = new List<WrongTask>();
+    //
+    //     foreach (var userAnswer in test.Answers)
+    //     {
+    //         var isCorrect = await CheckTask(new CheckTask
+    //         {
+    //             TaskId = userAnswer.TaskId,
+    //             UserId = test.UserId,
+    //             Answer = userAnswer.Answer
+    //         });
+    //
+    //         if (!isCorrect)
+    //         {
+    //             var task = await component.Tasks.FirstOrDefaultAsync(t => t.Id == userAnswer.TaskId);
+    //
+    //             wrongTasks.Add(new WrongTask
+    //             {
+    //                 Text = task != null ? task.Text : "",
+    //                 FilePath = task?.FilePath,
+    //                 Answer = userAnswer.Answer,
+    //             });
+    //         }
+    //     }
+    //
+    //     var score = $"{test.Answers.Count - wrongTasks.Count} / {test.Answers.Count}";
+    //
+    //     if (test.IsExam)
+    //     {
+    //         var testUser = new TestUser
+    //         {
+    //             UserId = test.UserId,
+    //             TestId = test.TestId,
+    //             CompletionDate = DateTime.Now,
+    //             Score = score
+    //         };
+    //         
+    //         await component.Insert(testUser);
+    //     }
+    //     
+    //     return new CheckedTest
+    //     {
+    //         WrongTasks = wrongTasks,
+    //         Score = score
+    //     };
+    // }
 
     public async Task<TaskForClientDto> GetTaskById(int taskId)
     {
@@ -205,38 +205,38 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         };
     }
 
-    public async Task<bool> CheckTask(CheckTask answer)
-    {
-        var task = await component.Tasks.FirstOrDefaultAsync(t => t.Id == answer.TaskId);
-
-        if (task == null) return false;
-
-        var existing = await component.CompletedTasks
-            .FirstOrDefaultAsync(ct => ct.UserId == answer.UserId && ct.TaskId == answer.TaskId);
-
-        var isCorrect = task.CorrectAnswer == answer.Answer;
-
-        if (existing != null)
-        {
-            existing.IsCorrect = isCorrect;
-            await component.Update(existing);
-        }
-        else
-        {
-            var completedTaskToAdd = new CompletedTask
-            {
-                TaskId = answer.TaskId,
-                UserId = answer.UserId,
-                IsCorrect = isCorrect
-            };
-
-            await component.Insert(completedTaskToAdd);
-        }
-
-        if (isCorrect) await UpdateProgress(answer.UserId, task.ThemeId, task.DifficultyLevel);
-
-        return task.CorrectAnswer == answer.Answer;
-    }
+    // public async Task<bool> CheckTask(CheckTask answer)
+    // {
+    //     var task = await component.Tasks.FirstOrDefaultAsync(t => t.Id == answer.TaskId);
+    //
+    //     if (task == null) return false;
+    //
+    //     var existing = await component.CompletedTasks
+    //         .FirstOrDefaultAsync(ct => ct.UserId == answer.UserId && ct.TaskId == answer.TaskId);
+    //
+    //     var isCorrect = task.CorrectAnswer == answer.Answer;
+    //
+    //     if (existing != null)
+    //     {
+    //         existing.IsCorrect = isCorrect;
+    //         await component.Update(existing);
+    //     }
+    //     else
+    //     {
+    //         var completedTaskToAdd = new CompletedTask
+    //         {
+    //             TaskId = answer.TaskId,
+    //             UserId = answer.UserId,
+    //             IsCorrect = isCorrect
+    //         };
+    //
+    //         await component.Insert(completedTaskToAdd);
+    //     }
+    //
+    //     if (isCorrect) await UpdateProgress(answer.UserId, task.ThemeId, task.DifficultyLevel);
+    //
+    //     return task.CorrectAnswer == answer.Answer;
+    // }
 
     public async Task<bool> ChangePassword(ChangePasswordClient request)
     {
@@ -324,63 +324,63 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         return fileBytes;
     }
 
-    private async Task UpdateProgress(int userId, int themeId, int taskDifficulty)
-    {
-        var existingEntry = await component.Progresses
-            .FirstOrDefaultAsync(p => p.UserId == userId && p.ThemeId == themeId);
+    // private async Task UpdateProgress(int userId, int themeId, int taskDifficulty)
+    // {
+    //     var existingEntry = await component.Progresses
+    //         .FirstOrDefaultAsync(p => p.UserId == userId && p.ThemeId == themeId);
+    //
+    //     const int maxLevel = 5;
+    //     int currentLevel = existingEntry?.Level ?? 1;
+    //     int currentAmount = existingEntry?.AmountToLevelUp ?? 5;
+    //
+    //     if (currentLevel >= maxLevel)
+    //         return;
+    //
+    //     int decrement = CalculateDecrement(taskDifficulty, currentLevel);
+    //
+    //     int updatedAmount = currentAmount - decrement;
+    //
+    //     int updatedLevel = currentLevel;
+    //
+    //     if (updatedAmount <= 0)
+    //     {
+    //         updatedLevel = Math.Min(currentLevel + 1, maxLevel);
+    //         updatedAmount = 5;
+    //     }
+    //
+    //     if (existingEntry == null)
+    //     {
+    //         var newProgress = new Progress
+    //         {
+    //             UserId = userId,
+    //             ThemeId = themeId,
+    //             Level = updatedLevel,
+    //             AmountToLevelUp = updatedAmount
+    //         };
+    //         await component.Insert(newProgress);
+    //     }
+    //     else
+    //     {
+    //         existingEntry.Level = updatedLevel;
+    //         existingEntry.AmountToLevelUp = updatedAmount;
+    //         await component.Update(existingEntry);
+    //     }
+    // }
 
-        const int maxLevel = 5;
-        int currentLevel = existingEntry?.Level ?? 1;
-        int currentAmount = existingEntry?.AmountToLevelUp ?? 5;
-
-        if (currentLevel >= maxLevel)
-            return;
-
-        int decrement = CalculateDecrement(taskDifficulty, currentLevel);
-
-        int updatedAmount = currentAmount - decrement;
-
-        int updatedLevel = currentLevel;
-
-        if (updatedAmount <= 0)
-        {
-            updatedLevel = Math.Min(currentLevel + 1, maxLevel);
-            updatedAmount = 5;
-        }
-
-        if (existingEntry == null)
-        {
-            var newProgress = new Progress
-            {
-                UserId = userId,
-                ThemeId = themeId,
-                Level = updatedLevel,
-                AmountToLevelUp = updatedAmount
-            };
-            await component.Insert(newProgress);
-        }
-        else
-        {
-            existingEntry.Level = updatedLevel;
-            existingEntry.AmountToLevelUp = updatedAmount;
-            await component.Update(existingEntry);
-        }
-    }
-
-    private int CalculateDecrement(int taskDifficulty, int currentLevel)
-    {
-        int diff = taskDifficulty - currentLevel;
-        return diff >= 0 ? diff + 1 : 1;
-    }
+    // private int CalculateDecrement(int taskDifficulty, int currentLevel)
+    // {
+    //     int diff = taskDifficulty - currentLevel;
+    //     return diff >= 0 ? diff + 1 : 1;
+    // }
 
     public async Task<List<ThemesStatistic>> GetStatisticForThemes(int userId)
     {
         var progresses = await component.Progresses.ToListAsync();
-        
+
         var tasks = await component.Tasks
             .Include(t => t.Theme)
             .ToListAsync();
-        
+
         var completedTasks = await component.CompletedTasks
             .Where(x => x.UserId == userId)
             .GroupBy(x => x.TaskId)
@@ -412,20 +412,20 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
 
         return statistic.Values.ToList();
     }
-    
+
     public async Task<ProfileInfo> GetProfileInfo(int userId)
     {
         var user = await component.Users.FirstOrDefaultAsync(u => u.Id == userId);
-        
+
         if (user == null) throw new Exception("Информация о пользователе не найдена");
-        
+
         var themeStat = await GetStatisticForThemes(user.Id);
 
         return new ProfileInfo
         {
-            LastName =  user.LastName,
+            LastName = user.LastName,
             FirstName = user.FirstName,
-            Username = user.Username, 
+            Username = user.Username,
             ThemesStatistics = themeStat,
         };
     }
@@ -442,13 +442,13 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
                 return await GenerateTestForExam();
             case TestTypes.ChallengingQuestions:
                 return await GenerateTestForChallengingQuestions(userId);
-            default: throw new  ArgumentOutOfRangeException(nameof(testType));
+            default: throw new ArgumentOutOfRangeException(nameof(testType));
         }
     }
 
     private async Task<TestForClientDto> GenerateTestForTheme(int themeId)
     {
-        var tasks =  await component.Tasks
+        var tasks = await component.Tasks
             .Where(t => t.ThemeId == themeId)
             .Select(t => new TaskDto
             {
@@ -468,7 +468,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             Tasks = tasks
         };
     }
-    
+
     private async Task<TestForClientDto> GenerateTestForMarathon()
     {
         var tasks = await component.Tasks
@@ -526,43 +526,81 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
 
             var tasksForTest = tasks.Take(5).ToList();
             var additionalQuestionsForTheme = tasks.TakeLast(5).ToList();
-            
+
             test.Tasks.AddRange(tasksForTest);
             test.AdditionalQuestions[themeId] = additionalQuestionsForTheme;
         }
-        
+
         return test;
     }
 
     private async Task<TestForClientDto> GenerateTestForChallengingQuestions(int userId)
     {
-        var mostChallengingQuestions = await component.CompletedTasks
+        var userLevels = component.Progresses
+            .Where(p => p.UserId == userId)
+            .ToDictionary(p => p.ThemeId, p => p.Level);
+        
+        var grouped = await component.CompletedTasks
             .Where(ct => ct.UserId == userId && ct.IsCorrect == false)
-            .GroupBy(ct => ct.TaskId)
+            .GroupBy(ct => new
+            {
+                ct.TaskId,
+                ct.Task.ThemeId,
+                ct.Task.DifficultyLevel
+            })
             .Select(g => new
             {
-                TaskId = g.Key,
+                TaskId = g.Key.TaskId,
+                ThemeId = g.Key.ThemeId,
+                Difficulty = g.Key.DifficultyLevel,
                 WrongCount = g.Count()
             })
-            .OrderByDescending(g => g.WrongCount)
+            .ToListAsync();
+
+        var mostChallengingQuestions = grouped
+            .Select(g =>
+            {
+                var userLevel = userLevels.TryGetValue(g.ThemeId, out var lvl)
+                    ? lvl
+                    : 1;
+
+                var distance = Math.Abs(g.Difficulty - userLevel);
+                var isAbove = g.Difficulty > userLevel ? 1 : 0;
+
+                return new
+                {
+                    g.TaskId,
+                    g.WrongCount,
+                    Distance = distance,
+                    IsAbove = isAbove
+                };
+            })
+            .OrderBy(g => g.Distance)
+            .ThenBy(g => g.IsAbove)
+            .ThenByDescending(g => g.WrongCount)
             .Take(20)
             .Select(g => g.TaskId)
-            .ToListAsync();
-        
-        var tasks = await component.Tasks
-            .Where(t => mostChallengingQuestions.Contains(t.Id))
-            .Select(t => new TaskDto()
+            .ToList();
+
+        var tasks = new List<TaskDto>();
+        foreach (var taskId in mostChallengingQuestions)
+        {
+            var task = component.Tasks.FirstOrDefault(t => t.Id == taskId);
+            
+            if (task == null) continue;
+            
+            tasks.Add(new TaskDto
             {
-                Id = t.Id,
-                ThemeId = t.ThemeId,
-                Text = t.Text,
-                CorrectAnswer = t.CorrectAnswer,
-                DifficultyLevel = t.DifficultyLevel,
-                FilePath = t.FilePath,
-                AnswerVariants = JsonConvert.DeserializeObject<List<string?>>(t.AnswerVariants) ?? new List<string?>(),
-                Hint = t.Hint
-            })
-            .ToListAsync();
+                Id = task.Id,
+                ThemeId = task.ThemeId,
+                Text = task.Text,
+                CorrectAnswer = task.CorrectAnswer,
+                DifficultyLevel = task.DifficultyLevel,
+                FilePath = task.FilePath,
+                AnswerVariants = JsonConvert.DeserializeObject<List<string?>>(task.AnswerVariants) ?? new List<string?>(),
+                Hint = task.Hint
+            });
+        }
         
         return new TestForClientDto()
         {
@@ -570,14 +608,24 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         };
     }
     
+    public async Task SaveAnswers(SaveAnswers request)
+    {
+        foreach (var answer in request.UserAnswers)
+        {
+            await SaveAnswer(request.UserId, answer.TaskId, answer.IsCorrect);
+        }
+    }
+
     public async Task SaveAnswer(int userId, int taskId, bool isCorrect)
     {
-        if (!component.Tasks.Any(t => t.Id == taskId))
+        var task = component.Tasks.FirstOrDefault(t => t.Id == taskId);
+
+        if (task is null)
             throw new Exception($"Не найдено задание с id {taskId}");
-        
+
         if (!component.Users.Any(u => u.Id == userId))
             throw new Exception($"Не найден пользователь с id {userId}");
-        
+
         var completedTask = new CompletedTask()
         {
             UserId = userId,
@@ -585,7 +633,113 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             IsCorrect = isCorrect,
             CompletedAt = DateTime.UtcNow
         };
-        
+
+        await ChangeUserProgress(task, userId, isCorrect);
+        await AlignDifficultyLevels();
+
+
         await component.Insert(completedTask);
+    }
+
+    private async Task AlignDifficultyLevels()
+    {
+        var tasks = component.Tasks.ToList();
+        
+        var completedTasksAmount = component.CompletedTasks
+            .GroupBy(ct => ct.TaskId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var correctCounts = component.CompletedTasks
+            .Where(ct => ct.IsCorrect == true)
+            .GroupBy(ct => ct.TaskId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var tasksToUpdate = new List<WebApi.Infrastructure.Models.Storage.Task>();
+        
+        foreach (var task in tasks)
+        {
+            if (!completedTasksAmount.TryGetValue(task.Id, out var totalCompleted))
+                continue;
+            
+            var correctCount = correctCounts.TryGetValue(task.Id, out var count) ? count : 0;
+
+            var percentage = totalCompleted > 0 ? (double)correctCount / totalCompleted * 100 : 0;
+
+            int correctLevelForPercentage;
+            switch (percentage)
+            {
+                case >= 0 and <= 20:
+                    correctLevelForPercentage = 1;
+                    break;
+                case > 20 and <= 40:
+                    correctLevelForPercentage = 2;
+                    break;
+                case > 40 and <= 60:
+                    correctLevelForPercentage = 3;
+                    break;
+                case > 60 and <= 80:
+                    correctLevelForPercentage = 4;
+                    break;
+                case > 80 and <= 100:
+                    correctLevelForPercentage = 5;
+                    break;
+                default:
+                    correctLevelForPercentage = 1;
+                    break;
+            }
+
+            if (task.DifficultyLevel == correctLevelForPercentage) continue;
+            
+            task.DifficultyLevel = correctLevelForPercentage;
+            tasksToUpdate.Add(task);
+        }
+        
+        await component.BulkUpdateAsync(tasksToUpdate);
+    }
+
+    private double GetExperience(bool isCorrect, int difficultyLevel, int currentLevel)
+    {
+        return !isCorrect ? 10 * (double)difficultyLevel / currentLevel : 10 * (double)currentLevel / difficultyLevel;
+    }
+
+    private async Task ChangeUserProgress(WebApi.Infrastructure.Models.Storage.Task task, int userId, bool isCorrect)
+    {
+        var currentProgress =
+            component.Progresses.FirstOrDefault(p => p.UserId == userId && p.ThemeId == task.ThemeId);
+        
+        bool toUpdate = true;
+
+        if (currentProgress?.Level == 5) return;
+        
+        if (currentProgress is null)
+        {
+            toUpdate = false;
+
+            currentProgress = new Progress
+            {
+                UserId = userId,
+                ThemeId = task.ThemeId,
+                Level = 1,
+                AmountToLevelUp = 100
+            };
+        }
+        
+        var experience = GetExperience(isCorrect, task.DifficultyLevel, currentProgress.Level);
+
+        currentProgress.AmountToLevelUp -= experience;
+
+        if (currentProgress.AmountToLevelUp <= 0)
+        {
+            currentProgress.Level += 1;
+            currentProgress.AmountToLevelUp = 100 * Math.Pow(2, currentProgress.Level);
+        }
+
+        if (toUpdate) await component.Update(currentProgress);
+        else await component.Insert(currentProgress);
+    }
+
+    public async Task<int> GetTaskAmount()
+    {
+        return await component.Tasks.CountAsync();
     }
 }
