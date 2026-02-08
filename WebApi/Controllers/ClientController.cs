@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using WebApi.Infrastructure.Models.DTO;
 using WebApi.Infrastructure.Models.Enums;
 using WebApi.Infrastructure.Models.Requests;
+using WebApi.Infrastructure.Models.Responses;
 using WebApi.Services;
-using Task = WebApi.Infrastructure.Models.Storage.Task;
 
 namespace WebApi.Controllers;
 
@@ -12,6 +12,41 @@ namespace WebApi.Controllers;
 [Route("[controller]/[action]")]
 public class ClientController(ClientService service) : ControllerBase
 {
+    [HttpGet]
+    public async Task<ActionResult<NewData>> GetNewData(DateTime? lastExchange)
+    {
+        try
+        {
+            return StatusCode(200, await service.GetNewData());
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    [HttpPost]
+    public async Task<ActionResult<bool>> UploadData(UploadData request)
+    {
+        try
+        {
+            var tasks = new List<Task<bool>>
+            {
+                service.UploadData(request.Users),
+                service.UploadData(request.CompletedTasks),
+                service.UploadData(request.Progresses)
+            };
+
+            await Task.WhenAll(tasks);
+            
+            return StatusCode(200);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
+    
     [HttpGet]
     public async Task<ActionResult<ProfileInfo>> GetProfileInfo([FromQuery] int userId)
     {
@@ -114,35 +149,7 @@ public class ClientController(ClientService service) : ControllerBase
             return StatusCode(500, e.Message);
         }
     }
-
-    // [HttpPost]
-    // public async Task<ActionResult<List<TaskForClientDto>>> CheckTest(TestForCheck request)
-    // {
-    //     try
-    //     {
-    //         var checkedTest = await service.CheckTest(request);
-    //
-    //         return StatusCode(200, checkedTest);
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         return StatusCode(500, e.Message);
-    //     }
-    // }
-
-    [HttpGet]
-    public async Task<ActionResult<Task>> GetTaskById(int taskId)
-    {
-        try
-        {
-            return StatusCode(200, await service.GetTaskById(taskId));
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, e.Message);
-        }
-    }
-
+    
     [HttpGet]
     public async Task<ActionResult<TaskDto>> GetRandomTask()
     {
@@ -157,20 +164,7 @@ public class ClientController(ClientService service) : ControllerBase
             return StatusCode(500, e.Message);
         }
     }
-
-    // [HttpPost]
-    // public async Task<ActionResult<bool>> CheckTask(CheckTask answer)
-    // {
-    //     try
-    //     {
-    //         return StatusCode(200, await service.CheckTask(answer));
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         return StatusCode(500, e.Message);
-    //     }
-    // }
-
+    
     [HttpPost]
     public async Task<ActionResult<bool>> ChangePassword(ChangePasswordClient request)
     {

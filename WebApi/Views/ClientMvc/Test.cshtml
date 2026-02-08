@@ -475,7 +475,7 @@
             const task = tasks.find(t => t.id == taskId) || extraQuestions.find(t => t.id == taskId);
             if (!task) return;
 
-            btn.classList.remove('exam'); // убираем серый
+            btn.classList.remove('exam');
             if (btn.dataset.answer === task.correctAnswer) {
                 btn.classList.add('correct');
             } else if (btn.dataset.answer === selected) {
@@ -484,7 +484,7 @@
             btn.disabled = true;
         });
 
-        fetch('/ClientMvc/SaveExamAnswers', {
+        fetch('/ClientMvc/SaveAnswers', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(allAnswers)

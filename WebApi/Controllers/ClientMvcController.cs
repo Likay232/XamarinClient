@@ -9,11 +9,13 @@ namespace WebApi.Controllers;
 [Route("[controller]/[action]")]
 public class ClientMvcController(ClientService service) : Controller
 {
+    [HttpGet]
     public IActionResult Index()
     {
         return View();
     }
 
+    [HttpGet]
     public async Task<IActionResult> Themes()
     {
         var themes = await service.GetThemes();
@@ -21,6 +23,7 @@ public class ClientMvcController(ClientService service) : Controller
         return View(themes);
     }
 
+    [HttpGet]
     public async Task<IActionResult> Lessons(int themeId)
     {
         var lessons = await service.GetLessonsForTheme(themeId);
@@ -28,6 +31,7 @@ public class ClientMvcController(ClientService service) : Controller
         return View(lessons);
     }
 
+    [HttpGet]
     public async Task<IActionResult> ProfileInfo()
     {
         var userIdStr = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -42,6 +46,7 @@ public class ClientMvcController(ClientService service) : Controller
         return View(profileInfo);
     }
 
+    [HttpGet]
     public async Task<IActionResult> Tasks(int themeId)
     {
         var userIdStr = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -107,6 +112,7 @@ public class ClientMvcController(ClientService service) : Controller
         }
     }
 
+    [HttpGet]
     public IActionResult TestVariants()
     {
         return View();

@@ -59,6 +59,21 @@ public class DataComponent(string connectionString)
             return false;
         }
     }
+    
+    public async Task<bool> BulkInsertAsync<T>(List<T> entityItem) where T : class
+    {
+        try
+        {
+            await using var context = new DatabaseContext(connectionString);
+            await context.BulkInsertAsync(entityItem);
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+    }
 
     public async Task<bool> Update<T>(T entityItem) where T : class
     {

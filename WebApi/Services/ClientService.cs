@@ -4,6 +4,7 @@ using WebApi.Infrastructure.Components;
 using WebApi.Infrastructure.Models.DTO;
 using WebApi.Infrastructure.Models.Enums;
 using WebApi.Infrastructure.Models.Requests;
+using WebApi.Infrastructure.Models.Responses;
 using WebApi.Infrastructure.Models.Storage;
 using Task = System.Threading.Tasks.Task;
 
@@ -11,6 +12,149 @@ namespace WebApi.Services;
 
 public class ClientService(DataComponent component, IWebHostEnvironment env)
 {
+    public async Task<NewData> GetNewData()
+    {
+        var newData = new NewData
+        {
+            Users = component.Users.ToList(),
+            Themes = component.Themes.ToList(),
+            Progresses = component.Progresses.ToList(),
+            Tasks = component.Tasks.ToList(),
+            CompletedTasks = component.CompletedTasks.ToList()
+        };
+
+        return newData;
+    }
+    public async Task<bool> UploadData<T>(List<T> data) where T : class
+    {
+        if (data.Count == 0) return true;
+        
+        if (typeof(T) == typeof(User))
+        {
+            var users = data.Cast<User>().ToList();
+            return await UploadUsers(users);
+        }
+
+        if (typeof(T) == typeof(Progress))
+        {
+            var progress = data.Cast<Progress>().ToList();
+            return await UploadProgress(progress);
+        }
+
+        if (typeof(T) == typeof(Infrastructure.Models.Storage.CompletedTask))
+        {
+            await component.BulkInsertAsync(data);
+            await AlignDifficultyLevels();
+            
+            return true;
+        }
+        
+        return await component.BulkInsertAsync(data);
+    }
+
+    private async Task<bool> UploadUsers(List<User> users)
+    {
+        var usersDb = component.Users;
+
+        var onUpload = new List<User>();
+
+        foreach (var user in users)
+        {
+            if (usersDb.Any(u => u.Username == user.Username))
+                continue;
+
+            onUpload.Add(user);
+        }
+
+        return await component.BulkInsertAsync(onUpload);
+    }
+
+    private async Task<bool> UploadProgress(List<Progress> progresses)
+    {
+        var progressDb = component.Progresses.ToList();
+
+        var onUpdate = new List<Progress>();
+        var onInsert = new List<Progress>();
+
+        foreach (var progress in progresses)
+        {
+            var progressFromDb =
+                progressDb.FirstOrDefault(p => p.UserId == progress.UserId && p.ThemeId == progress.ThemeId);
+
+            if (progressFromDb is not null)
+            {
+                var higherLevel = progressFromDb.Level > progress.Level ? progressFromDb : progress;
+                var lowerLevel = progressFromDb.Level > progress.Level ? progress : progressFromDb;
+
+                var earnedXp = GetLevelCap(lowerLevel.Level) - lowerLevel.AmountToLevelUp;
+
+                var progressToUpdate = new Progress
+                {
+                    Id = progressFromDb.Id,
+                    UserId = progressFromDb.UserId,
+                    ThemeId = progressFromDb.ThemeId,
+                    Level = higherLevel.Level,
+                    AmountToLevelUp = higherLevel.AmountToLevelUp - earnedXp,
+                };
+
+                var currentLevelCap = GetLevelCap(lowerLevel.Level);
+                
+                if (progressToUpdate.AmountToLevelUp > currentLevelCap)
+                {
+                    progressToUpdate.AmountToLevelUp = currentLevelCap;
+                }
+                else if (progressToUpdate.AmountToLevelUp <= 0)
+                {
+                    progressToUpdate.Level += 1;
+                    progressToUpdate.AmountToLevelUp = GetLevelCap(progressToUpdate.Level);
+                }
+
+                onUpdate.Add(progressToUpdate);
+            }
+
+            else
+                onInsert.Add(progress);
+        }
+
+        if (onUpdate.Any())
+            await component.BulkInsertAsync(onUpdate);
+        if (onInsert.Any())
+            await component.BulkInsertAsync(onInsert);
+
+        return true;
+    }
+
+    public async Task<List<UserDto>> GetNewUsers(DateTime lastClientEntryRegistration)
+    {
+        return component.Users
+            .Where(u => u.ModifiedAt > lastClientEntryRegistration)
+            .Select(u => new UserDto()
+            {
+                Username = u.Username,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                IsBlocked = u.IsBlocked,
+                LastLogin = u.LastLogin,
+                Password = u.Password,
+            })
+            .ToList();
+    }
+
+    public async Task<List<Infrastructure.Models.DTO.CompletedTask>> GetNewCompletedTasks(
+        DateTime lastClientEntryCompleted)
+    {
+        return component.CompletedTasks
+            .Where(completedTask => completedTask.CompletedAt > lastClientEntryCompleted)
+            .Select(completedTask => new Infrastructure.Models.DTO.CompletedTask()
+            {
+                UserId = completedTask.UserId,
+                TaskId = completedTask.TaskId,
+                CompletedAt = completedTask.CompletedAt,
+                IsCorrect = completedTask.IsCorrect
+            })
+            .ToList();
+    }
+
     public async Task<bool> RegisterDevice(RegisterDevice request)
     {
         if (!await component.Users.AnyAsync(u => u.Id == request.UserId))
@@ -116,55 +260,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             })
             .ToListAsync();
     }
-
-    // public async Task<CheckedTest> CheckTest(TestForCheck test)
-    // {
-    //     var wrongTasks = new List<WrongTask>();
-    //
-    //     foreach (var userAnswer in test.Answers)
-    //     {
-    //         var isCorrect = await CheckTask(new CheckTask
-    //         {
-    //             TaskId = userAnswer.TaskId,
-    //             UserId = test.UserId,
-    //             Answer = userAnswer.Answer
-    //         });
-    //
-    //         if (!isCorrect)
-    //         {
-    //             var task = await component.Tasks.FirstOrDefaultAsync(t => t.Id == userAnswer.TaskId);
-    //
-    //             wrongTasks.Add(new WrongTask
-    //             {
-    //                 Text = task != null ? task.Text : "",
-    //                 FilePath = task?.FilePath,
-    //                 Answer = userAnswer.Answer,
-    //             });
-    //         }
-    //     }
-    //
-    //     var score = $"{test.Answers.Count - wrongTasks.Count} / {test.Answers.Count}";
-    //
-    //     if (test.IsExam)
-    //     {
-    //         var testUser = new TestUser
-    //         {
-    //             UserId = test.UserId,
-    //             TestId = test.TestId,
-    //             CompletionDate = DateTime.Now,
-    //             Score = score
-    //         };
-    //         
-    //         await component.Insert(testUser);
-    //     }
-    //     
-    //     return new CheckedTest
-    //     {
-    //         WrongTasks = wrongTasks,
-    //         Score = score
-    //     };
-    // }
-
+    
     public async Task<TaskForClientDto> GetTaskById(int taskId)
     {
         var taskFromDb = await component.Tasks.FirstOrDefaultAsync(t => t.Id == taskId);
@@ -204,40 +300,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             FilePath = randomTask.FilePath,
         };
     }
-
-    // public async Task<bool> CheckTask(CheckTask answer)
-    // {
-    //     var task = await component.Tasks.FirstOrDefaultAsync(t => t.Id == answer.TaskId);
-    //
-    //     if (task == null) return false;
-    //
-    //     var existing = await component.CompletedTasks
-    //         .FirstOrDefaultAsync(ct => ct.UserId == answer.UserId && ct.TaskId == answer.TaskId);
-    //
-    //     var isCorrect = task.CorrectAnswer == answer.Answer;
-    //
-    //     if (existing != null)
-    //     {
-    //         existing.IsCorrect = isCorrect;
-    //         await component.Update(existing);
-    //     }
-    //     else
-    //     {
-    //         var completedTaskToAdd = new CompletedTask
-    //         {
-    //             TaskId = answer.TaskId,
-    //             UserId = answer.UserId,
-    //             IsCorrect = isCorrect
-    //         };
-    //
-    //         await component.Insert(completedTaskToAdd);
-    //     }
-    //
-    //     if (isCorrect) await UpdateProgress(answer.UserId, task.ThemeId, task.DifficultyLevel);
-    //
-    //     return task.CorrectAnswer == answer.Answer;
-    // }
-
+    
     public async Task<bool> ChangePassword(ChangePasswordClient request)
     {
         var user = await component.Users.FirstOrDefaultAsync(u => u.Id == request.UserId);
@@ -250,68 +313,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
 
         return await component.Update(user);
     }
-
-    // public async Task<List<TaskForClientDto>> GenerateTest(GenerateTest request)
-    // {
-    //     var test = new List<TaskForClientDto>();
-    //     var random = new Random();
-    //
-    //     foreach (var themeId in request.DesiredTasksAmount.Keys)
-    //     {
-    //         var userProgress = await component.Progresses
-    //             .FirstOrDefaultAsync(p => p.ThemeId == themeId && p.UserId == request.UserId);
-    //
-    //         if (userProgress == null)
-    //         {
-    //             userProgress = new Progress
-    //             {
-    //                 UserId = request.UserId,
-    //                 ThemeId = themeId,
-    //                 Level = 1,
-    //                 AmountToLevelUp = 5
-    //             };
-    //
-    //             await component.Insert(userProgress);
-    //         }
-    //
-    //         var tasks = await component.Tasks
-    //             .Where(t => t.ThemeId == themeId)
-    //             .ToListAsync();
-    //         
-    //         var completedTasksIds = await component.CompletedTasks
-    //             .Where(t => t.UserId == request.UserId && t.IsCorrect == true)
-    //             .Select(t => t.TaskId)
-    //             .ToListAsync();
-    //
-    //         var desiredTaskAmount = Math.Min(request.DesiredTasksAmount[themeId], tasks.Count);
-    //
-    //         var selectedTasks = tasks
-    //             .Select(task => new
-    //             {
-    //                 task.Id,
-    //                 task.Text,
-    //                 task.DifficultyLevel,
-    //                 task.FilePath,
-    //                 WasSolvedCorrectly = completedTasksIds.Contains(task.Id),
-    //             })
-    //             .OrderBy(t => t.WasSolvedCorrectly ? 1 : 0)
-    //             .ThenBy(t => t.DifficultyLevel <= userProgress.Level ? 0 : 1)
-    //             .ThenBy(_ => random.Next())
-    //             .Take(desiredTaskAmount)
-    //             .Select(t => new TaskForClientDto
-    //             {
-    //                 Id = t.Id,
-    //                 Text = t.Text,
-    //                 DifficultyLevel = t.DifficultyLevel,
-    //                 FilePath = t.FilePath,
-    //             });
-    //
-    //         test.AddRange(selectedTasks);
-    //     }
-    //
-    //     return test;
-    // }
-
+    
     public async Task<byte[]?> GetFileBytes(string fileName)
     {
         var filePath = Path.Combine(env.ContentRootPath, "FileRepository", fileName);
@@ -323,56 +325,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
 
         return fileBytes;
     }
-
-    // private async Task UpdateProgress(int userId, int themeId, int taskDifficulty)
-    // {
-    //     var existingEntry = await component.Progresses
-    //         .FirstOrDefaultAsync(p => p.UserId == userId && p.ThemeId == themeId);
-    //
-    //     const int maxLevel = 5;
-    //     int currentLevel = existingEntry?.Level ?? 1;
-    //     int currentAmount = existingEntry?.AmountToLevelUp ?? 5;
-    //
-    //     if (currentLevel >= maxLevel)
-    //         return;
-    //
-    //     int decrement = CalculateDecrement(taskDifficulty, currentLevel);
-    //
-    //     int updatedAmount = currentAmount - decrement;
-    //
-    //     int updatedLevel = currentLevel;
-    //
-    //     if (updatedAmount <= 0)
-    //     {
-    //         updatedLevel = Math.Min(currentLevel + 1, maxLevel);
-    //         updatedAmount = 5;
-    //     }
-    //
-    //     if (existingEntry == null)
-    //     {
-    //         var newProgress = new Progress
-    //         {
-    //             UserId = userId,
-    //             ThemeId = themeId,
-    //             Level = updatedLevel,
-    //             AmountToLevelUp = updatedAmount
-    //         };
-    //         await component.Insert(newProgress);
-    //     }
-    //     else
-    //     {
-    //         existingEntry.Level = updatedLevel;
-    //         existingEntry.AmountToLevelUp = updatedAmount;
-    //         await component.Update(existingEntry);
-    //     }
-    // }
-
-    // private int CalculateDecrement(int taskDifficulty, int currentLevel)
-    // {
-    //     int diff = taskDifficulty - currentLevel;
-    //     return diff >= 0 ? diff + 1 : 1;
-    // }
-
+    
     public async Task<List<ThemesStatistic>> GetStatisticForThemes(int userId)
     {
         var progresses = await component.Progresses.ToListAsync();
@@ -539,7 +492,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         var userLevels = component.Progresses
             .Where(p => p.UserId == userId)
             .ToDictionary(p => p.ThemeId, p => p.Level);
-        
+
         var grouped = await component.CompletedTasks
             .Where(ct => ct.UserId == userId && ct.IsCorrect == false)
             .GroupBy(ct => new
@@ -550,8 +503,8 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             })
             .Select(g => new
             {
-                TaskId = g.Key.TaskId,
-                ThemeId = g.Key.ThemeId,
+                g.Key.TaskId,
+                g.Key.ThemeId,
                 Difficulty = g.Key.DifficultyLevel,
                 WrongCount = g.Count()
             })
@@ -586,9 +539,9 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         foreach (var taskId in mostChallengingQuestions)
         {
             var task = component.Tasks.FirstOrDefault(t => t.Id == taskId);
-            
+
             if (task == null) continue;
-            
+
             tasks.Add(new TaskDto
             {
                 Id = task.Id,
@@ -597,23 +550,44 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
                 CorrectAnswer = task.CorrectAnswer,
                 DifficultyLevel = task.DifficultyLevel,
                 FilePath = task.FilePath,
-                AnswerVariants = JsonConvert.DeserializeObject<List<string?>>(task.AnswerVariants) ?? new List<string?>(),
+                AnswerVariants = JsonConvert.DeserializeObject<List<string?>>(task.AnswerVariants) ??
+                                 new List<string?>(),
                 Hint = task.Hint
             });
         }
-        
+
         return new TestForClientDto()
         {
             Tasks = tasks
         };
     }
-    
+
     public async Task SaveAnswers(SaveAnswers request)
     {
         foreach (var answer in request.UserAnswers)
         {
-            await SaveAnswer(request.UserId, answer.TaskId, answer.IsCorrect);
+            var task = component.Tasks.FirstOrDefault(t => t.Id == answer.TaskId);
+
+            if (task is null)
+                throw new Exception($"Не найдено задание с id {answer.TaskId}");
+
+            if (!component.Users.Any(u => u.Id == request.UserId))
+                throw new Exception($"Не найден пользователь с id {request.UserId}");
+
+            var completedTask = new Infrastructure.Models.Storage.CompletedTask()
+            {
+                UserId = request.UserId,
+                TaskId = answer.TaskId,
+                IsCorrect = answer.IsCorrect,
+                CompletedAt = DateTime.UtcNow
+            };
+            
+            await ChangeUserProgress(task, request.UserId, answer.IsCorrect);
+
+            await component.Insert(completedTask);
         }
+
+        await AlignDifficultyLevels();
     }
 
     public async Task SaveAnswer(int userId, int taskId, bool isCorrect)
@@ -626,7 +600,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         if (!component.Users.Any(u => u.Id == userId))
             throw new Exception($"Не найден пользователь с id {userId}");
 
-        var completedTask = new CompletedTask()
+        var completedTask = new Infrastructure.Models.Storage.CompletedTask()
         {
             UserId = userId,
             TaskId = taskId,
@@ -637,14 +611,13 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         await ChangeUserProgress(task, userId, isCorrect);
         await AlignDifficultyLevels();
 
-
         await component.Insert(completedTask);
     }
 
-    private async Task AlignDifficultyLevels()
+    private async Task<List<WebApi.Infrastructure.Models.Storage.Task>> AlignDifficultyLevels()
     {
         var tasks = component.Tasks.ToList();
-        
+
         var completedTasksAmount = component.CompletedTasks
             .GroupBy(ct => ct.TaskId)
             .ToDictionary(g => g.Key, g => g.Count());
@@ -655,12 +628,12 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             .ToDictionary(g => g.Key, g => g.Count());
 
         var tasksToUpdate = new List<WebApi.Infrastructure.Models.Storage.Task>();
-        
+
         foreach (var task in tasks)
         {
             if (!completedTasksAmount.TryGetValue(task.Id, out var totalCompleted))
                 continue;
-            
+
             var correctCount = correctCounts.TryGetValue(task.Id, out var count) ? count : 0;
 
             var percentage = totalCompleted > 0 ? (double)correctCount / totalCompleted * 100 : 0;
@@ -689,12 +662,15 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             }
 
             if (task.DifficultyLevel == correctLevelForPercentage) continue;
-            
+
             task.DifficultyLevel = correctLevelForPercentage;
+            task.ModifiedAt = DateTime.UtcNow;
             tasksToUpdate.Add(task);
         }
-        
+
         await component.BulkUpdateAsync(tasksToUpdate);
+        
+        return tasksToUpdate;
     }
 
     private double GetExperience(bool isCorrect, int difficultyLevel, int currentLevel)
@@ -706,11 +682,11 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
     {
         var currentProgress =
             component.Progresses.FirstOrDefault(p => p.UserId == userId && p.ThemeId == task.ThemeId);
-        
+
         bool toUpdate = true;
 
         if (currentProgress?.Level == 5) return;
-        
+
         if (currentProgress is null)
         {
             toUpdate = false;
@@ -723,20 +699,27 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
                 AmountToLevelUp = 100
             };
         }
-        
+
         var experience = GetExperience(isCorrect, task.DifficultyLevel, currentProgress.Level);
 
+        currentProgress.ModifiedAt = DateTime.UtcNow;
         currentProgress.AmountToLevelUp -= experience;
+        var currentLevelCap = GetLevelCap(currentProgress.Level);
+
+        if (currentProgress.AmountToLevelUp > currentLevelCap)
+            currentProgress.AmountToLevelUp = currentLevelCap;
 
         if (currentProgress.AmountToLevelUp <= 0)
         {
             currentProgress.Level += 1;
-            currentProgress.AmountToLevelUp = 100 * Math.Pow(2, currentProgress.Level);
+            currentProgress.AmountToLevelUp = GetLevelCap(currentProgress.Level);
         }
 
         if (toUpdate) await component.Update(currentProgress);
         else await component.Insert(currentProgress);
     }
+
+    private double GetLevelCap(int level) => 100 * Math.Pow(2, level);
 
     public async Task<int> GetTaskAmount()
     {

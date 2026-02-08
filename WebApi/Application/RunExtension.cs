@@ -107,6 +107,8 @@ public static class RunExtension
             options.RoutePrefix = "swagger";
         });
 
+        app.MapGet("/ping", () => Results.Ok()); 
+        
         app.MapControllerRoute(
             name: "default",
             pattern: "{controller=AuthMvc}/{action=Login}/{id?}");

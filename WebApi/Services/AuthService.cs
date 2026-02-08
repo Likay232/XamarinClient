@@ -32,6 +32,7 @@ public class AuthService(DataComponent component)
             role = "Client";
             userId = user.Id;
             user.LastLogin = DateTime.Now;
+            user.ModifiedAt = DateTime.UtcNow;
             await component.Update(user);
         }
 

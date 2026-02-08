@@ -65,6 +65,7 @@ public class AdminService(DataComponent component, IWebHostEnvironment env)
             throw new Exception("Пользователь с заданным Id не найден");
 
         userEntry.Password = request.NewPassword;
+        userEntry.ModifiedAt = DateTime.UtcNow;
 
         return await component.Update(userEntry);
     }
@@ -164,6 +165,7 @@ public class AdminService(DataComponent component, IWebHostEnvironment env)
             throw new Exception("Задание с таким Id не найдено.");
 
         taskToEdit.Text = updatedTask.Text;
+        taskToEdit.ModifiedAt = DateTime.UtcNow;
         taskToEdit.CorrectAnswer = updatedTask.CorrectAnswer;
         taskToEdit.DifficultyLevel = updatedTask.DifficultyLevel;
         taskToEdit.FilePath = updatedTask.FilePath;
@@ -321,6 +323,7 @@ public class AdminService(DataComponent component, IWebHostEnvironment env)
 
         themeToUpdate.Title = updatedTheme.Title;
         themeToUpdate.Description = updatedTheme.Description;
+        themeToUpdate.ModifiedAt = DateTime.UtcNow;
 
         return await component.Update(themeToUpdate);
     }
@@ -390,6 +393,7 @@ public class AdminService(DataComponent component, IWebHostEnvironment env)
         
         lessonToUpdate.Text = updatedLesson.Text;
         lessonToUpdate.Link = updatedLesson.Link;
+        lessonToUpdate.ModifiedAt = DateTime.UtcNow;
         
         return await component.Update(lessonToUpdate);
     }
