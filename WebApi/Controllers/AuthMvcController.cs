@@ -1,5 +1,4 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Infrastructure.Models.Requests;
 using WebApi.Services;
@@ -44,7 +43,7 @@ public class AuthMvcController(AuthService service) : Controller
     {
         try
         {
-            var token = await service.Login(request);
+            var token = (await service.Login(request))?.accessToken;
 
             if (string.IsNullOrEmpty(token))
             {

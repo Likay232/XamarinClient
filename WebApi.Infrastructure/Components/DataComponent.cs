@@ -16,8 +16,7 @@ public class DataComponent(string connectionString)
     public IQueryable<Test> Tests => new DatabaseContext(connectionString).Tests;
     public IQueryable<Task> Tasks => new DatabaseContext(connectionString).Tasks;
     public IQueryable<UserDevice> UserDevices => new DatabaseContext(connectionString).UserDevices;
-    public IQueryable<TestUser> TestUsers => new DatabaseContext(connectionString).TestUsers;
-
+    public IQueryable<UserToken> UserTokens => new DatabaseContext(connectionString).UserTokens;
     public async Task<bool> DeleteUser(int userId)
     {
         try

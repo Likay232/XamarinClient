@@ -321,6 +321,34 @@ namespace WebApi.Infrastructure.Migrations
                     b.ToTable("user_devices", (string)null);
                 });
 
+            modelBuilder.Entity("WebApi.Infrastructure.Models.Storage.UserToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("user_token", (string)null);
+                });
+
             modelBuilder.Entity("WebApi.Infrastructure.Models.Storage.CompletedTask", b =>
                 {
                     b.HasOne("WebApi.Infrastructure.Models.Storage.Task", "Task")
@@ -423,6 +451,17 @@ namespace WebApi.Infrastructure.Migrations
                 {
                     b.HasOne("WebApi.Infrastructure.Models.Storage.User", "User")
                         .WithMany("Devices")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WebApi.Infrastructure.Models.Storage.UserToken", b =>
+                {
+                    b.HasOne("WebApi.Infrastructure.Models.Storage.User", "User")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

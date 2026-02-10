@@ -9,6 +9,19 @@ namespace WebApi.Controllers;
 public class AuthController(AuthService service) : ControllerBase
 {
     [HttpPost]
+    public async Task<ActionResult<(string accessToken, string refreshToken)>> RefreshToken(string refreshToken)
+    {
+        try
+        {
+            return StatusCode(200, await service.Refresh(refreshToken));
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    [HttpPost]
     public async Task<ActionResult<bool>> Register(Register request)
     {
         try

@@ -12,15 +12,14 @@ namespace WebApi.Services;
 
 public class ClientService(DataComponent component, IWebHostEnvironment env)
 {
-    public async Task<NewData> GetNewData()
+    public async Task<NewData> GetNewData(DateTime lastExchange, int userId)
     {
         var newData = new NewData
         {
-            Users = component.Users.ToList(),
             Themes = component.Themes.ToList(),
-            Progresses = component.Progresses.ToList(),
             Tasks = component.Tasks.ToList(),
-            CompletedTasks = component.CompletedTasks.ToList()
+            Progresses = component.Progresses.Where(p => p.UserId == userId).ToList(),
+            Lessons = component.Lessons.ToList(),
         };
 
         return newData;
@@ -561,7 +560,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             Tasks = tasks
         };
     }
-
+    
     public async Task SaveAnswers(SaveAnswers request)
     {
         foreach (var answer in request.UserAnswers)
@@ -609,9 +608,10 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         };
 
         await ChangeUserProgress(task, userId, isCorrect);
-        await AlignDifficultyLevels();
-
+        
         await component.Insert(completedTask);
+        
+        await AlignDifficultyLevels();
     }
 
     private async Task<List<WebApi.Infrastructure.Models.Storage.Task>> AlignDifficultyLevels()

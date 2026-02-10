@@ -10,5 +10,4 @@ public class NewData
     public List<Progress> Progresses { get; set; } = [];
     public List<Storage.Task> Tasks { get; set; } = [];
     public List<Theme> Themes { get; set; } = [];
-    public List<User> Users { get; set; } = [];
 }

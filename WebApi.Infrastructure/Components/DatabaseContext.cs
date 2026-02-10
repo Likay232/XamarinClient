@@ -4,28 +4,20 @@ using Task = WebApi.Infrastructure.Models.Storage.Task;
 
 namespace WebApi.Infrastructure.Components;
 
-public class DatabaseContext : DbContext
+public class DatabaseContext(string connectionString) : DbContext
 {
-    private readonly string _connectionString;
-    
-    public DatabaseContext()
-    {
-        _connectionString = "Server=localhost;Port=5434;User Id=postgres;Password=12345;Database=xamarinDb";
-    }
-
-    public DatabaseContext(string connectionString)
-    {
-        _connectionString = connectionString;
-    }
+    public DatabaseContext() : this("Server=localhost;Port=5434;User Id=postgres;Password=12345;Database=xamarinDb")
+    { }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseNpgsql(_connectionString);
+        optionsBuilder.UseNpgsql(connectionString);
     }
 
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
     modelBuilder.Entity<User>().ToTable("users");
+    modelBuilder.Entity<UserToken>().ToTable("user_token");
     modelBuilder.Entity<Theme>().ToTable("themes");
     modelBuilder.Entity<TestTask>().ToTable("test_tasks");
     modelBuilder.Entity<Test>().ToTable("tests");
@@ -103,6 +95,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 }
     
     public DbSet<User> Users { get; set; }
+    public DbSet<UserToken> UserTokens { get; set; }
     public DbSet<Theme> Themes { get; set; }
     public DbSet<TestTask> TestTasks { get; set; }
     public DbSet<Lesson> Lessons { get; set; }
