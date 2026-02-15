@@ -1,12 +1,10 @@
-﻿namespace WebApi.Infrastructure.Models.Storage;
+namespace WebApi.Infrastructure.Models.DTO;
 
-public class Progress : BaseEntity
+public class Progress
 {
     public int UserId { get; set; }
-    public User User { get; set; }
     
     public int ThemeId { get; set; }
-    public Theme Theme { get; set; }
     
     public int Level { get; set; }
     public double AmountToLevelUp { get; set; }

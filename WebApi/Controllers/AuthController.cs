@@ -35,7 +35,7 @@ public class AuthController(AuthService service) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<string?>> Login(Login request)
+    public async Task<ActionResult<Infrastructure.Models.Responses.Login>> Login(Login request)
     {
         try
         {

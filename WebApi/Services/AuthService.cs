@@ -69,8 +69,10 @@ public class AuthService(DataComponent component)
         return (accessToken, newRefreshToken);
     }
 
-    public async Task<(string accessToken, string refreshToken)?> Login(Login request)
+    public async Task<Infrastructure.Models.Responses.Login?> Login(Login request)
     {
+        var response =  new Infrastructure.Models.Responses.Login();
+        
         string? role;
         int userId;
         User? user = null;
@@ -97,7 +99,12 @@ public class AuthService(DataComponent component)
 
         var accessToken = GenerateAccessToken(userId, request.UserName, role);
 
-        if (user == null) return (accessToken, "");
+        if (user == null)
+        {
+            response.AccessToken = accessToken;
+            return response;
+            
+        }
 
         var refreshToken = GenerateRefreshToken();
         
@@ -109,7 +116,10 @@ public class AuthService(DataComponent component)
 
         await component.Insert(userToken);
 
-        return (accessToken, refreshToken);
+        response.AccessToken = accessToken;
+        response.RefreshToken = refreshToken;
+        
+        return response;
     }
 
     public async Task<bool> Register(Register request)

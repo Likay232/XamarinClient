@@ -7,12 +7,13 @@ using WebApi.Infrastructure.Models.Requests;
 using WebApi.Infrastructure.Models.Responses;
 using WebApi.Infrastructure.Models.Storage;
 using Task = System.Threading.Tasks.Task;
+using Progress = WebApi.Infrastructure.Models.Storage.Progress;
 
 namespace WebApi.Services;
 
 public class ClientService(DataComponent component, IWebHostEnvironment env)
 {
-    public async Task<NewData> GetNewData(DateTime lastExchange, int userId)
+    public async Task<NewData> GetNewData(int userId)
     {
         var newData = new NewData
         {
@@ -34,9 +35,9 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             return await UploadUsers(users);
         }
 
-        if (typeof(T) == typeof(Progress))
+        if (typeof(T) == typeof(Infrastructure.Models.DTO.Progress))
         {
-            var progress = data.Cast<Progress>().ToList();
+            var progress = data.Cast<Infrastructure.Models.DTO.Progress>().ToList();
             return await UploadProgress(progress);
         }
 
@@ -68,7 +69,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         return await component.BulkInsertAsync(onUpload);
     }
 
-    private async Task<bool> UploadProgress(List<Progress> progresses)
+    private async Task<bool> UploadProgress(List<Infrastructure.Models.DTO.Progress> progresses)
     {
         var progressDb = component.Progresses.ToList();
 
@@ -79,21 +80,27 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         {
             var progressFromDb =
                 progressDb.FirstOrDefault(p => p.UserId == progress.UserId && p.ThemeId == progress.ThemeId);
-
-            if (progressFromDb is not null)
+            
+        if (progressFromDb is not null)
             {
-                var higherLevel = progressFromDb.Level > progress.Level ? progressFromDb : progress;
-                var lowerLevel = progressFromDb.Level > progress.Level ? progress : progressFromDb;
+                var converted = new Infrastructure.Models.DTO.Progress()
+                {
+                    UserId = progress.UserId,
+                    ThemeId = progress.ThemeId,
+                    AmountToLevelUp = progress.AmountToLevelUp,
+                    Level = progress.Level,
+                };
 
-                var earnedXp = GetLevelCap(lowerLevel.Level) - lowerLevel.AmountToLevelUp;
-
+                var higherLevel = progressFromDb.Level > progress.Level ? converted : progress;
+                var lowerLevel = progressFromDb.Level > progress.Level ? progress : converted;
+                
                 var progressToUpdate = new Progress
                 {
                     Id = progressFromDb.Id,
                     UserId = progressFromDb.UserId,
                     ThemeId = progressFromDb.ThemeId,
                     Level = higherLevel.Level,
-                    AmountToLevelUp = higherLevel.AmountToLevelUp - earnedXp,
+                    AmountToLevelUp = higherLevel.AmountToLevelUp,
                 };
 
                 var currentLevelCap = GetLevelCap(lowerLevel.Level);
@@ -112,11 +119,17 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             }
 
             else
-                onInsert.Add(progress);
+                onInsert.Add(new Progress()
+                {
+                    ThemeId = progress.ThemeId,
+                    UserId = progress.UserId,
+                    AmountToLevelUp = progress.AmountToLevelUp,
+                    Level = progress.Level
+                });
         }
 
         if (onUpdate.Any())
-            await component.BulkInsertAsync(onUpdate);
+            await component.BulkUpdateAsync(onUpdate);
         if (onInsert.Any())
             await component.BulkInsertAsync(onInsert);
 

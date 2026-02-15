@@ -13,11 +13,11 @@ namespace WebApi.Controllers;
 public class ClientController(ClientService service) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<NewData>> GetNewData(DateTime? lastExchange, int userId)
+    public async Task<ActionResult<NewData>> GetNewData(int userId)
     {
         try
         {
-            return StatusCode(200, await service.GetNewData(lastExchange ?? DateTime.MinValue, userId));
+            return StatusCode(200, await service.GetNewData(userId));
         }
         catch (Exception e)
         {
@@ -38,7 +38,7 @@ public class ClientController(ClientService service) : ControllerBase
 
             await Task.WhenAll(tasks);
             
-            return StatusCode(200);
+            return StatusCode(200, true);
         }
         catch (Exception e)
         {

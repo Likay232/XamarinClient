@@ -43,7 +43,7 @@ public class AuthMvcController(AuthService service) : Controller
     {
         try
         {
-            var token = (await service.Login(request))?.accessToken;
+            var token = (await service.Login(request))?.AccessToken;
 
             if (string.IsNullOrEmpty(token))
             {
