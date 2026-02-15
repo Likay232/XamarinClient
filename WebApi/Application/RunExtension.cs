@@ -124,11 +124,12 @@ public static class RunExtension
         });
     }
 
-    public static void RegistrationEndpoints(this WebApplicationBuilder builder)
+    public static void RegisterServices(this WebApplicationBuilder builder)
     {
         builder.Services.AddScoped<AdminService>();
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddScoped<ClientService>();
+        builder.Services.AddHostedService<NotificationBackgroundService>();
         builder.Services.AddControllersWithViews();
         builder.Services.AddRazorPages();
     }

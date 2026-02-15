@@ -29,12 +29,6 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
     {
         if (data.Count == 0) return true;
         
-        if (typeof(T) == typeof(User))
-        {
-            var users = data.Cast<User>().ToList();
-            return await UploadUsers(users);
-        }
-
         if (typeof(T) == typeof(Infrastructure.Models.DTO.Progress))
         {
             var progress = data.Cast<Infrastructure.Models.DTO.Progress>().ToList();
@@ -51,24 +45,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         
         return await component.BulkInsertAsync(data);
     }
-
-    private async Task<bool> UploadUsers(List<User> users)
-    {
-        var usersDb = component.Users;
-
-        var onUpload = new List<User>();
-
-        foreach (var user in users)
-        {
-            if (usersDb.Any(u => u.Username == user.Username))
-                continue;
-
-            onUpload.Add(user);
-        }
-
-        return await component.BulkInsertAsync(onUpload);
-    }
-
+    
     private async Task<bool> UploadProgress(List<Infrastructure.Models.DTO.Progress> progresses)
     {
         var progressDb = component.Progresses.ToList();
@@ -135,38 +112,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
 
         return true;
     }
-
-    public async Task<List<UserDto>> GetNewUsers(DateTime lastClientEntryRegistration)
-    {
-        return component.Users
-            .Where(u => u.ModifiedAt > lastClientEntryRegistration)
-            .Select(u => new UserDto()
-            {
-                Username = u.Username,
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                IsBlocked = u.IsBlocked,
-                LastLogin = u.LastLogin,
-                Password = u.Password,
-            })
-            .ToList();
-    }
-
-    public async Task<List<Infrastructure.Models.DTO.CompletedTask>> GetNewCompletedTasks(
-        DateTime lastClientEntryCompleted)
-    {
-        return component.CompletedTasks
-            .Where(completedTask => completedTask.CompletedAt > lastClientEntryCompleted)
-            .Select(completedTask => new Infrastructure.Models.DTO.CompletedTask()
-            {
-                UserId = completedTask.UserId,
-                TaskId = completedTask.TaskId,
-                CompletedAt = completedTask.CompletedAt,
-                IsCorrect = completedTask.IsCorrect
-            })
-            .ToList();
-    }
-
+    
     public async Task<bool> RegisterDevice(RegisterDevice request)
     {
         if (!await component.Users.AnyAsync(u => u.Id == request.UserId))

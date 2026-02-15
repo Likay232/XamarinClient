@@ -6,7 +6,7 @@ builder.Services.ConnectionCreate();
 builder.Services.AddJwtAuthentication();
 builder.AddAuthorization();
 
-builder.RegistrationEndpoints();
+builder.RegisterServices();
 
 builder.WebHost.ConfigureKestrel(options => options.ListenAnyIP(5000));
 

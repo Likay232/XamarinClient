@@ -103,7 +103,6 @@ public class AuthService(DataComponent component)
         {
             response.AccessToken = accessToken;
             return response;
-            
         }
 
         var refreshToken = GenerateRefreshToken();
@@ -118,6 +117,8 @@ public class AuthService(DataComponent component)
 
         response.AccessToken = accessToken;
         response.RefreshToken = refreshToken;
+        
+        await component.Update(user);
         
         return response;
     }
