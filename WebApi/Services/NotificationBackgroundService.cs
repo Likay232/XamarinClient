@@ -10,7 +10,7 @@ namespace WebApi.Services;
 
 public class NotificationBackgroundService(DataComponent component) : BackgroundService
 {
-    private readonly CronExpression _cronExpression = CronExpression.Parse("0 15 * * *");
+    private readonly CronExpression _cronExpression = CronExpression.Parse("0 15 */3 * *");
     private static bool Initialized { get; set; }
 
     private static void InitializeNotifications()
