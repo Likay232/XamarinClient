@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -117,10 +119,29 @@ public static class RunExtension
             name:"AdminRoute",
             pattern:"{controller=Admin}/{action=Index}/{id?}");
         
-        app.MapGet("/", context =>
+        app.MapGet("/", async context =>
         {
-            context.Response.Redirect("/AuthMvc/Login");
-            return Task.CompletedTask;
+            if (!context.Request.Cookies.TryGetValue("AuthToken", out var authToken))
+            {
+                context.Response.Redirect("/AuthMvc/Login");
+                return;
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(authToken);
+
+            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
+
+            if (roleClaim == "Admin")
+            {
+                context.Response.Redirect("/Admin/Index");
+            }
+            else if (roleClaim == "Client")
+            {
+                context.Response.Redirect("/ClientMvc/Index");
+            }
+
+            await Task.CompletedTask;
         });
     }
 

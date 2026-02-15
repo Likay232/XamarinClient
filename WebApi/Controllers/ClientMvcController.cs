@@ -18,6 +18,14 @@ public class ClientMvcController(ClientService service) : Controller
     }
 
     [HttpGet]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete("AuthToken");
+
+        return RedirectToAction("Login", "AuthMvc");
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Themes()
     {
         var themes = await service.GetThemes();

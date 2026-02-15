@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WebApi.Infrastructure.Models.DTO;
 using WebApi.Infrastructure.Models.Requests;
 using WebApi.Services;
 
 namespace WebApi.Controllers;
 
-// [Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin")]
 [Route("[controller]/[action]")]
 public class AdminController(AdminService service) : Controller
 {
@@ -338,5 +339,13 @@ public class AdminController(AdminService service) : Controller
     public async Task<ActionResult<int>> GetRegistrationsStatistic(DateTime dateFrom, DateTime dateTo)
     {
         return StatusCode(200, await service.GetRegisteredNumberForPeriod(dateFrom, dateTo));
+    }
+
+    [HttpGet]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete("AuthToken");
+
+        return RedirectToAction("Login", "AuthMvc");
     }
 }
