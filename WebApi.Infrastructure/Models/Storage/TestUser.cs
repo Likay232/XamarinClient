@@ -7,6 +7,7 @@ public class TestUser : BaseEntity
     public int UserId { get; set; }
     public User? User { get; set; }
     
-    public string Score { get; set; } = string.Empty;
-    public DateTime CompletionDate { get; set; } = DateTime.Now;
+    public int MistakesCount { get; set; }
+    public bool IsPassed { get; set; }
+    public DateTime CompletionDate { get; set; } = DateTime.UtcNow;
 }

@@ -324,6 +324,35 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         return statistic.Values.ToList();
     }
 
+    public async Task<ExamStatistic> GetStatisticsForExams(int userId)
+    {
+        var userExams = component.TestUsers
+            .Where(u => u.UserId == userId)
+            .ToList();
+    
+        var totalTries = userExams.Count;
+
+        if (totalTries == 0)
+            return new ExamStatistic()
+            {
+                Solved = 0,
+                AverageMistakesAmount = 0,
+                CorrectPercent = 0
+            };
+
+        var averageMistakes = userExams.Sum(u => u.MistakesCount) / (double)totalTries;
+
+        var passedCount = userExams.Count(u => u.IsPassed);
+        var correctPercent = (passedCount / (double)totalTries) * 100;
+
+        return new ExamStatistic
+        {
+            Solved = totalTries,
+            AverageMistakesAmount = averageMistakes,
+            CorrectPercent = correctPercent
+        };
+    }
+
     public async Task<ProfileInfo> GetProfileInfo(int userId)
     {
         var user = await component.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -331,6 +360,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         if (user == null) throw new Exception("Информация о пользователе не найдена");
 
         var themeStat = await GetStatisticForThemes(user.Id);
+        var examStat =  await GetStatisticsForExams(user.Id);
 
         return new ProfileInfo
         {
@@ -338,6 +368,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             FirstName = user.FirstName,
             Username = user.Username,
             ThemesStatistics = themeStat,
+            ExamStatistic = examStat
         };
     }
 
@@ -522,6 +553,8 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
     
     public async Task SaveAnswers(SaveAnswers request)
     {
+        var generatedTestEntry = component.Tests.FirstOrDefaultAsync(t => t.Title == "Generated Test");
+        
         foreach (var answer in request.UserAnswers)
         {
             var task = component.Tasks.FirstOrDefault(t => t.Id == answer.TaskId);
@@ -544,8 +577,20 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
 
             await component.Insert(completedTask);
         }
-
+        
         await AlignDifficultyLevels();
+        
+        var generatedTestId = (await generatedTestEntry)?.Id;
+        
+        if (generatedTestId is null) return;
+
+        await component.Insert(new TestUser
+        {
+            UserId = request.UserId,
+            TestId = (int)generatedTestId,
+            IsPassed = request.IsPassed,
+            MistakesCount = request.MistakesCount
+        });
     }
 
     public async Task SaveAnswer(int userId, int taskId, bool isCorrect)

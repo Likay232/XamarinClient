@@ -19,6 +19,33 @@
         </div>
 
     </div>
+    
+    <div class="stat-card">
+
+        <div class="stat-header">
+            <span class="theme-name">Экзамены</span>
+            <span class="level-badge">Сдано: @Model.ExamStatistic.Solved</span>
+        </div>
+
+        <div class="progress-group">
+            <div class="exam-progress-entry">
+                <span>Среднее количество ошибок:</span>
+                <span>@Model.ExamStatistic.AverageMistakesAmount</span>
+            </div>
+        </div>
+
+        <div class="progress-group">
+            <div class="exam-progress-entry">
+                <span>Решено верно:</span>
+                <span>@Model.ExamStatistic.CorrectPercent%</span>
+            </div>
+            <div class="progress-bar correct">
+                <div class="progress-fill correct" style="width:@Model.ExamStatistic.CorrectPercent%"></div>
+            </div>
+        </div>
+
+    </div>
+
 
     <h3 class="section-title">Статистика по темам</h3>
 
@@ -45,7 +72,7 @@
                         Правильные ответы <span>@stat.SolvedCorrectPercent%</span>
                     </div>
                     <div class="progress-bar correct">
-                        <div class="progress-fill" style="width:@stat.SolvedCorrectPercent%"></div>
+                        <div class="progress-fill correct" style="width:@stat.SolvedCorrectPercent%"></div>
                     </div>
                 </div>
             </div>
@@ -55,6 +82,11 @@
 
 
 <style>
+    .exam-progress-entry {
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+    
     .bull{
         margin-right: 5px;
         margin-left: 5px;
@@ -97,6 +129,7 @@
     }
     
     .section-title {
+        margin-top: 15px;
         margin-bottom: 15px;
     }
 
@@ -104,6 +137,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 20px;
+        margin-top: 15px;
     }
 
     .stat-card {
@@ -152,6 +186,10 @@
 
     .progress-bar.correct {
         background: #e6f4ea;
+    }
+
+    .progress-fill.correct {
+        background: green;
     }
 
     .progress-fill {

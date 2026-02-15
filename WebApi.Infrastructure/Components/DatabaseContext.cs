@@ -93,6 +93,13 @@ public class DatabaseContext(string connectionString) : DbContext
             .WithOne(tt => tt.Task)
             .HasForeignKey(tt => tt.TaskId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Test>().HasData(new Test
+        {
+            Id = 1,
+            Title = "Generated Test",
+            ModifiedAt = DateTime.MinValue,
+        });
     }
 
     public DbSet<User> Users { get; set; }
