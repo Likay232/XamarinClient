@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Infrastructure.Models.Enums;
 using WebApi.Infrastructure.Models.Requests;
@@ -7,6 +8,7 @@ using WebApi.Services;
 namespace WebApi.Controllers;
 
 [Route("[controller]/[action]")]
+[Authorize("NotBlocked")]
 public class ClientMvcController(ClientService service) : Controller
 {
     [HttpGet]
