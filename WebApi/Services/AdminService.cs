@@ -10,6 +10,12 @@ namespace WebApi.Services;
 
 public class AdminService(DataComponent component, IWebHostEnvironment env)
 {
+    public async Task<int> GetRegisteredNumberForPeriod(DateTime dateFrom, DateTime dateTo)
+    {
+        return await component.Users
+            .CountAsync(u => u.RegisteredAt >= dateFrom.ToUniversalTime() && u.RegisteredAt <= dateTo.ToUniversalTime());
+    }
+    
     public async Task<List<UserDto>> GetUsers()
     {
         return await component.Users

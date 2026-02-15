@@ -333,4 +333,10 @@ public class AdminController(AdminService service) : Controller
         
         return View(model);
     }
+
+    [HttpGet]
+    public async Task<ActionResult<int>> GetRegistrationsStatistic(DateTime dateFrom, DateTime dateTo)
+    {
+        return StatusCode(200, await service.GetRegisteredNumberForPeriod(dateFrom, dateTo));
+    }
 }

@@ -9,6 +9,7 @@ public class User : BaseEntity
     public string Password { get; set; } = string.Empty;
     
     public DateTime LastLogin { get; set; }
+    public DateTime RegisteredAt { get; set; }
 
     public bool IsBlocked { get; set; }
     

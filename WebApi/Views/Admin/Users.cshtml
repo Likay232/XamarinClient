@@ -122,7 +122,52 @@
         flex-direction: row;
         justify-content: space-between;
     }
+
+    .stats-overview-inline {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        margin-bottom: 20px;
+        flex-wrap: wrap; /* если экран маленький — переносит элементы */
+    }
+
+    .stats-overview-inline label {
+        font-weight: 500;
+        font-size: 16px;
+    }
+
+    .stats-overview-inline span {
+        font-size: 16px;
+    }
+
+    .stats-overview-inline input[type="date"] {
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+
+    .stats-overview-inline .stat-result {
+        font-weight: 600;
+        color: #0275d8;
+        margin-left: 10px;
+    }
 </style>
+
+<div class="stats-overview">
+    <div class="stats-overview-inline">
+        <span>Зарегистрировались</span>
+        <span>с</span>
+        <input type="date" id="dateFrom"/>
+
+        <span>по</span>
+        <input type="date" id="dateTo"/>
+
+        <span class="stat-result" id="registrationResult">Выберите период</span>
+        <span>человек</span>
+    </div>
+</div>
+
 
 <div class="users-grid">
     @foreach (var user in Model)
@@ -175,3 +220,38 @@
         </div>
     }
 </div>
+
+<script>
+    const dateFromInput = document.getElementById("dateFrom");
+    const dateToInput = document.getElementById("dateTo");
+    const resultDiv = document.getElementById("registrationResult");
+
+    async function fetchRegistrations() {
+        const dateFrom = dateFromInput.value;
+        const dateTo = dateToInput.value;
+
+        if (!dateFrom || !dateTo) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/Admin/GetRegistrationsStatistic?dateFrom=${dateFrom}&dateTo=${dateTo}`);
+            if (!response.ok) throw new Error("Ошибка запроса");
+            const count = await response.json();
+            resultDiv.textContent = `${count}`;
+        } catch (err) {
+            resultDiv.textContent = "Ошибка при загрузке статистики";
+            console.error(err);
+        }
+    }
+
+    dateFromInput.addEventListener("change", fetchRegistrations);
+    dateToInput.addEventListener("change", fetchRegistrations);
+
+    const today = new Date().toISOString().split('T')[0];
+    const weekAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString().split('T')[0];
+    dateToInput.value = today;
+    dateFromInput.value = weekAgo;
+    fetchRegistrations();
+</script>
+
