@@ -1,7 +1,7 @@
 ﻿@model WebApi.Infrastructure.Models.DTO.TaskDto
 @{
-    ViewBag.Title = "Добавление задания";
-    Layout = "_AdminLayout";
+ViewBag.Title = "Добавление задания";
+Layout = "_AdminLayout";
 }
 
 <style>
@@ -23,7 +23,8 @@
 
     .custom-form label {
         display: block;
-        margin-bottom: 5px;
+        margin-top: 15px;
+        margin-bottom: 15px;
         font-weight: 600;
         color: #444;
     }
@@ -34,7 +35,6 @@
     .custom-form input[type="file"] {
         width: 100%;
         padding: 10px;
-        margin-bottom: 20px;
         border: 1px solid #ccc;
         border-radius: 6px;
         transition: border-color 0.2s;
@@ -46,7 +46,54 @@
         outline: none;
     }
 
-    .custom-form button,
+    .answer-item {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
+        gap: 8px;
+    }
+
+    .answer-item input {
+        flex: 1;
+    }
+
+    .answer-item button {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        transition: background 0.15s ease;
+    }
+
+    .answer-item button.remove {
+        background-color: #dc3545;
+    }
+
+    .answer-item button:hover {
+        opacity: 0.85;
+    }
+
+    .custom-form .btn-add-answer {
+        background-color: #28a745;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        margin-bottom: 20px;
+        transition: background 0.15s ease;
+    }
+
+    .custom-form .btn-add-answer:hover {
+        background-color: #218838;
+    }
+
+    .custom-form button.submit-btn,
     .custom-form a.btn-cancel {
         display: inline-block;
         padding: 10px 20px;
@@ -58,12 +105,12 @@
         margin-top: 10px;
     }
 
-    .custom-form button {
+    .custom-form button.submit-btn {
         background-color: #007bff;
         color: white;
     }
 
-    .custom-form button:hover {
+    .custom-form button.submit-btn:hover {
         background-color: #0056b3;
     }
 
@@ -76,6 +123,13 @@
     .custom-form a.btn-cancel:hover {
         background-color: #aaa;
     }
+
+    .error-message {
+        color: #dc3545;
+        font-size: 14px;
+        margin-bottom: 10px;
+        display: none;
+    }
 </style>
 
 <form method="post"
@@ -87,21 +141,32 @@
     <h2>Добавить задание к теме @Model.ThemeName</h2>
 
     <input type="hidden" name="ThemeId" value="@Model.ThemeId"/>
-    
+
     <label for="Image">Картинка (опционально)</label>
-    <input name="Image" type="file" accept="image/*" />
+    <div id="imageWrapper" style="position: relative; display: flex; align-items: center; gap: 10px;">
+        <input id="ImageInput" name="Image" type="file" accept="image/*" />
+        <div id="imagePreviewContainer" style="display: flex; align-items: center; gap: 10px;"></div>
+    </div>
 
     <label for="Text">Текст задания</label>
-    <textarea name="Text" for="Text" rows="4" required></textarea>
+    <textarea name="Text" rows="4" required></textarea>
 
     <label for="CorrectAnswer">Верный ответ</label>
     <input name="CorrectAnswer" type="text" required />
+    <div class="error-message" id="correctAnswerError">Правильный ответ должен совпадать с одним из вариантов!</div>
 
-    @for (int i = 0; i < 4; i++)
-    {
-        <label for="AnswerVariants">Вариант ответа @(i + 1)</label>
-        <input name="AnswerVariants" type="text" />
-    }
+    <label>Варианты ответов</label>
+    <div id="answersContainer">
+        @for (int i = 0; i < 4; i++)
+        {
+        <div class="answer-item">
+            <input name="AnswerVariants" type="text" placeholder="Введите вариант ответа" required />
+            <button type="button" class="remove" onclick="removeAnswer(this)">−</button>
+        </div>
+        }
+    </div>
+
+    <button type="button" class="btn-add-answer" onclick="addAnswer()">Добавить вариант</button>
 
     <label for="DifficultyLevel">Сложность (1–5)</label>
     <input name="DifficultyLevel" type="number" min="1" max="5" required />
@@ -109,6 +174,100 @@
     <label for="Hint">Комментарий</label>
     <input name="Hint" type="text" required />
 
-    <button type="submit">Добавить задание</button>
+    <button type="submit" class="submit-btn">Добавить задание</button>
     <a asp-action="Themes" asp-controller="Admin" class="btn-cancel">Отмена</a>
 </form>
+
+<script>
+    function addAnswer() {
+        const container = document.getElementById("answersContainer");
+        const div = document.createElement("div");
+        div.className = "answer-item";
+        div.innerHTML = `
+            <input name="AnswerVariants" type="text" placeholder="Введите вариант ответа" required />
+            <button type="button" class="remove" onclick="removeAnswer(this)">−</button>
+        `;
+        container.appendChild(div);
+    }
+
+    function removeAnswer(button) {
+        const container = document.getElementById("answersContainer");
+        if (container.children.length > 1) { // оставляем хотя бы один вариант
+            button.parentElement.remove();
+        }
+    }
+
+    const form = document.querySelector(".custom-form");
+    form.addEventListener("submit", function (e) {
+        const correctInput = form.querySelector("input[name='CorrectAnswer']");
+        const correctValue = correctInput.value.trim();
+
+        const variants = Array.from(form.querySelectorAll("input[name='AnswerVariants']"))
+            .map(v => v.value.trim())
+            .filter(v => v.length > 0); // на случай пустых полей
+
+        if (variants.length < 2) {
+            e.preventDefault();
+            alert("Минимум вариантов ответ - 2");
+            return;
+        }
+        
+        const errorDiv = document.getElementById("correctAnswerError");
+
+        if (!variants.includes(correctValue)) {
+            e.preventDefault();
+            errorDiv.style.display = "block";
+            correctInput.focus();
+        } else {
+            errorDiv.style.display = "none";
+        }
+    });
+
+    const imageInput = document.getElementById("ImageInput");
+    const previewContainer = document.getElementById("imagePreviewContainer");
+
+    imageInput.addEventListener("change", function() {
+        previewContainer.innerHTML = ""; // очищаем старое превью
+
+        if (imageInput.files && imageInput.files[0]) {
+            const file = imageInput.files[0];
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+            img.style.maxWidth = "100px";
+            img.style.maxHeight = "100px";
+            img.style.borderRadius = "6px";
+            img.style.objectFit = "cover";
+
+            const removeBtn = document.createElement("button");
+            removeBtn.type = "button";
+            removeBtn.textContent = "−";
+            removeBtn.style.backgroundColor = "#dc3545";
+            removeBtn.style.color = "white";
+            removeBtn.style.border = "none";
+            removeBtn.style.borderRadius = "50%";
+            removeBtn.style.width = "25px";
+            removeBtn.style.height = "25px";
+            removeBtn.style.fontWeight = "bold";
+            removeBtn.style.cursor = "pointer";
+
+            removeBtn.addEventListener("click", function() {
+                imageInput.value = ""; // очищаем выбранный файл
+                previewContainer.innerHTML = ""; // убираем превью
+            });
+
+            const wrapper = document.createElement("div");
+            wrapper.style.display = "flex";
+            wrapper.style.alignItems = "center";
+            wrapper.style.gap = "5px";
+
+            wrapper.appendChild(img);
+            wrapper.appendChild(removeBtn);
+            previewContainer.appendChild(wrapper);
+        }
+    });
+
+    function removeSelectedImage() {
+        const fileInput = document.getElementById("ImageInput");
+        fileInput.value = ""; 
+    }
+</script>

@@ -1,8 +1,8 @@
 ﻿@model WebApi.Infrastructure.Models.DTO.TaskDto
 
 @{
-    ViewBag.Title = "Задания";
-    Layout = "_AdminLayout";
+ViewBag.Title = "Редактирование задания";
+Layout = "_AdminLayout";
 }
 
 <style>
@@ -29,10 +29,14 @@
     .custom-form input[type="file"] {
         width: 100%;
         padding: 10px;
-        margin-bottom: 20px;
         border: 1px solid #ccc;
         border-radius: 6px;
         transition: border-color 0.2s;
+    }
+    
+    .custom-form label {
+        margin-top: 15px;
+        margin-bottom: 15px;
     }
 
     .custom-form input:focus,
@@ -41,7 +45,53 @@
         outline: none;
     }
 
-    .custom-form button {
+    .answer-item {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+        align-items: center;
+    }
+
+    .answer-item input {
+        flex: 1;
+    }
+
+    .answer-item button {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        color: white;
+        transition: opacity 0.15s ease;
+    }
+
+    .answer-item button.remove {
+        background-color: #dc3545;
+    }
+
+    .answer-item button.remove:hover {
+        opacity: 0.85;
+    }
+
+    .btn-add-answer {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: none;
+        background-color: #28a745;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        margin-bottom: 15px;
+        transition: background 0.15s ease;
+    }
+
+    .btn-add-answer:hover {
+        background-color: #218838;
+    }
+
+    .custom-form button.submit-btn {
         padding: 10px 20px;
         background-color: #007bff;
         border: none;
@@ -52,49 +102,123 @@
         margin-top: 10px;
     }
 
-    .custom-form button:hover {
+    .custom-form button.submit-btn:hover {
         background-color: #0056b3;
     }
 
-    .custom-form .task-image {
+    .task-image {
         display: block;
         margin: 10px auto;
         max-width: 500px;
         border-radius: 5px;
     }
 
+    .error-message {
+        color: #dc3545;
+        font-size: 14px;
+        margin-bottom: 10px;
+        display: none;
+    }
 </style>
 
 <form asp-action="EditTask" asp-controller="Admin" method="post" enctype="multipart/form-data" class="custom-form">
     <input type="hidden" name="Id" value="@Model.Id" />
     <input type="hidden" name="ThemeId" value="@Model.ThemeId" />
-    <input type="hidden" name="FilePath" value="@Model.FilePath"/>
 
     @if (Model.FilePath != null)
     {
-        <img src="@Model.FilePath" alt="Изображение задания" class="task-image"/>
+        <div style="position: relative; display: inline-block;">
+            <img src="@Model.FilePath" alt="Изображение задания" class="task-image"/>
+            <button type="button"
+                    style="position: absolute; top: 5px; right: 5px; background-color: #dc3545; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold;"
+                    onclick="removeImage()">−</button>
+        </div>
     }
+    <input type="hidden" id="FilePath" name="FilePath" value="@Model.FilePath"/>
 
     <label for="Image">Картинка (опционально)</label>
     <input id="Image" type="file" name="Image" accept="image/*" />
-    
+
     <label for="Text">Текст задания</label>
     <textarea id="Text" name="Text" rows="4" required>@Model.Text</textarea>
 
     <label for="CorrectAnswer">Правильный ответ</label>
     <input id="CorrectAnswer" name="CorrectAnswer" type="text" required value="@Model.CorrectAnswer" />
+    <div class="error-message" id="correctAnswerError">Правильный ответ должен совпадать с одним из вариантов!</div>
+
+    <label>Варианты ответов</label>
+    <div id="answersContainer">
+        @for (int i = 0; i < Model.AnswerVariants.Count; i++)
+        {
+        <div class="answer-item">
+            <input name="AnswerVariants" type="text" placeholder="Введите вариант ответа" required value="@Model.AnswerVariants[i]" />
+            <button type="button" class="remove" onclick="removeAnswer(this)">−</button>
+        </div>
+        }
+    </div>
+
+    <button type="button" class="btn-add-answer" onclick="addAnswer()">Добавить вариант</button>
 
     <label for="DifficultyLevel">Уровень сложности</label>
     <input id="DifficultyLevel" name="DifficultyLevel" type="number" min="1" max="5" required value="@Model.DifficultyLevel" />
-    
-    @for (int i = 0; i < @Model.AnswerVariants.Count; i++)
-    {
-        <label for="AnswerVariants">Вариант ответа @(i + 1)</label>
-        <input id="AnswerVariants" name="AnswerVariants" type="text" value="@Model.AnswerVariants[i]"/>
-    }
 
     <label for="Hint">Комментарий</label>
-    <input id="Hint" name="Hint" type="text" required value="@Model.Hint"/>
+    <input id="Hint" name="Hint" type="text" required value="@Model.Hint" />
 
-    <button type="submit">Сохранить</button>
+    <button type="submit" class="submit-btn">Сохранить</button>
 </form>
+
+<script>
+    function addAnswer() {
+        const container = document.getElementById("answersContainer");
+        const div = document.createElement("div");
+        div.className = "answer-item";
+        div.innerHTML = `
+            <input name="AnswerVariants" type="text" placeholder="Введите вариант ответа" required />
+            <button type="button" class="remove" onclick="removeAnswer(this)">−</button>
+        `;
+        container.appendChild(div);
+    }
+
+    function removeAnswer(button) {
+        const container = document.getElementById("answersContainer");
+        if (container.children.length > 1) {
+            button.parentElement.remove();
+        }
+    }
+
+    const form = document.querySelector(".custom-form");
+    form.addEventListener("submit", function(e) {
+        const correctInput = document.getElementById("CorrectAnswer");
+        const correctValue = correctInput.value.trim();
+
+        const variants = Array.from(form.querySelectorAll("input[name='AnswerVariants']"))
+            .map(v => v.value.trim())
+            .filter(v => v.length > 0); // на случай пустых полей
+
+        if (variants.length < 2) {
+            e.preventDefault();
+            alert("Минимум вариантов ответ - 2");
+            return;
+        }
+
+        const errorDiv = document.getElementById("correctAnswerError");
+
+        if (!variants.includes(correctValue)) {
+            e.preventDefault(); // блокируем отправку
+            errorDiv.style.display = "block";
+            correctInput.focus();
+        } else {
+            errorDiv.style.display = "none";
+        }
+    });
+
+    function removeImage() {
+        const imgWrapper = event.target.parentElement;
+        const hiddenInput = document.getElementById("FilePath");
+        
+        imgWrapper.remove();
+        
+        hiddenInput.value = "";
+    }
+</script>
