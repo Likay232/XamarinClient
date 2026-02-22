@@ -61,7 +61,7 @@ public class NotificationBackgroundService(DataComponent component) : Background
             Data = new Dictionary<string, string>
             {
                 { "title", "Вы давно не заходили!" },
-                { "body", "Я конечно не зеленая сова, но я с ней знаком. Ты же любишь свою семью?" },
+                { "body", "Продолжайте практиковаться." },
             },
             Tokens = deviceTokens,
         };
