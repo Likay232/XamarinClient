@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Infrastructure.Models.Enums;
@@ -115,6 +116,30 @@ public class ClientMvcController(ClientService service) : Controller
 
             return StatusCode(200);
 
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<bool>> SaveAnswers([FromBody]SaveAnswers request)
+    {
+        try
+        {
+            var userIdStr = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdStr == null)
+                throw new Exception("No user claim found");
+        
+            int.TryParse(userIdStr, out var userId);
+
+            request.UserId = userId;
+            
+            await service.SaveAnswers(request);
+            
+            return StatusCode(200, true);
         }
         catch (Exception e)
         {

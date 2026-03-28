@@ -406,20 +406,22 @@
     }
 
     function checkFinishExam() {
-        // считаем ответы только по основным вопросам
         const stats = getStatsExam();
-        console.log(stats)
         
-        // если все основные вопросы отвечены
+        console.log(stats);
+        
         if (stats.answered === stats.total) {
-            const failedTheme = Object.values(stats.themeErrors).some(c => c >= 1);
+            const failedTheme = Object.values(stats.themeErrors).some(c => c >= 2);
+            const failedThemeCount = Object.values(stats.themeErrors).filter(c => c > 0).length;
             const failedTotal = stats.totalErrors > 2;
 
-            // если есть ошибки и доп. вопросы ещё не загружены
             console.log(failedTheme);
             console.log(failedTotal);
-            console.log(extraQuestions);
-            if ((failedTheme || failedTotal) && extraQuestions.length === 0) {
+            console.log(failedThemeCount);
+            
+
+
+            if (!(failedTheme || failedTotal) && failedThemeCount <= 2 && stats.totalErrors >= 1 && extraQuestions.length === 0) {
                 extraQuestions = [];
                 for (let themeId in stats.themeErrors) {
                     const extra = additionalQuestions[themeId]?.slice(0, 5);
@@ -428,18 +430,16 @@
                 }
                 
                 if (extraQuestions.length > 0) {
-                    // просто перерисовываем навигацию, не меняя текущий индекс
-                    renderNav(false); // основная навигация
-                    renderNav(true);  // доп. вопросы
+                    
+                    renderNav(false); 
+                    renderNav(true);  
                     return;
                 }
             }
-
-            // если доп. вопросы уже отвечены или не нужны — заканчиваем экзамен
+            
             if (extraQuestions.length > 0) {
-                // проверяем, отвечены ли все доп. вопросы
                 const allExtraAnswered = extraQuestions.every(q => extraAnswers[q.id]);
-                if (!allExtraAnswered) return; // ждем ответы на доп. вопросы
+                if (!allExtraAnswered) return;
             }
 
             finishExam();
@@ -484,10 +484,23 @@
             btn.disabled = true;
         });
 
+        const payload = {
+            UserAnswers: Object.entries(allAnswers).map(([taskId, selected]) => {
+                const task = tasks.find(t => t.id == taskId) || extraQuestions.find(t => t.id == taskId);
+                return {
+                    TaskId: parseInt(taskId, 10),
+                    IsCorrect: task ? (selected === task.correctAnswer) : false,
+                    Answer: String(selected ?? '')
+                };
+            }),
+            IsPassed: !((totalErrors > 2) || failedTheme),
+            MistakesCount: totalErrors
+        };
+
         fetch('/ClientMvc/SaveAnswers', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(allAnswers)
+            body: JSON.stringify(payload)
         });
         
         renderNav();

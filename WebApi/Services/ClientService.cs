@@ -324,7 +324,7 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         return statistic.Values.ToList();
     }
 
-    public async Task<ExamStatistic> GetStatisticsForExams(int userId)
+    private async Task<ExamStatistic> GetStatisticsForExams(int userId)
     {
         var userExams = component.TestUsers
             .Where(u => u.UserId == userId)
@@ -348,8 +348,8 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         return new ExamStatistic
         {
             Solved = totalTries,
-            AverageMistakesAmount = averageMistakes,
-            CorrectPercent = correctPercent
+            AverageMistakesAmount = Math.Round(averageMistakes, 2),
+            CorrectPercent = Math.Round(correctPercent, 0)
         };
     }
 
