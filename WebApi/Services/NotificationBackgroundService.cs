@@ -32,14 +32,17 @@ public class NotificationBackgroundService(DataComponent component) : Background
         
         while (!stoppingToken.IsCancellationRequested)
         {
-            var next = _cronExpression.GetNextOccurrence(DateTime.UtcNow);
+            var now = DateTime.UtcNow;
+            var next = _cronExpression.GetNextOccurrence(now);
+            if (!next.HasValue)
+            {
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                continue;
+            }
 
-            if (!next.HasValue) continue;
-            
-            var delay = next - DateTime.Now;
-            
-            if (delay.Value.TotalMilliseconds > 0)
-                await Task.Delay(delay.Value, stoppingToken);
+            var delay = next.Value - now;
+            if (delay.TotalMilliseconds > 0)
+                await Task.Delay(delay, stoppingToken);
 
             await SendNotifications();
         }
@@ -55,6 +58,9 @@ public class NotificationBackgroundService(DataComponent component) : Background
             .Select(ud => ud.DeviceToken)
             .Distinct()
             .ToList();
+        
+        if (deviceTokens.Count == 0)
+            return;
         
         var message = new MulticastMessage()
         {
