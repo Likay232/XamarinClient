@@ -550,11 +550,11 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
             Tasks = tasks
         };
     }
-    
+
     public async Task SaveAnswers(SaveAnswers request)
     {
         var generatedTestEntry = component.Tests.FirstOrDefaultAsync(t => t.Title == "Generated Test");
-        
+
         foreach (var answer in request.UserAnswers)
         {
             var task = component.Tasks.FirstOrDefault(t => t.Id == answer.TaskId);
@@ -572,16 +572,16 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
                 IsCorrect = answer.IsCorrect,
                 CompletedAt = DateTime.UtcNow
             };
-            
+
             await ChangeUserProgress(task, request.UserId, answer.IsCorrect);
 
             await component.Insert(completedTask);
         }
-        
+
         await AlignDifficultyLevels();
-        
+
         var generatedTestId = (await generatedTestEntry)?.Id;
-        
+
         if (generatedTestId is null) return;
 
         await component.Insert(new TestUser
@@ -612,9 +612,9 @@ public class ClientService(DataComponent component, IWebHostEnvironment env)
         };
 
         await ChangeUserProgress(task, userId, isCorrect);
-        
+
         await component.Insert(completedTask);
-        
+
         await AlignDifficultyLevels();
     }
 

@@ -276,7 +276,6 @@
             if (i === current) cls += ' active';
 
             if (finished) {
-                // финальная подсветка в навигации
                 const selected = examAnswers[task.id] || extraAnswers[task.id];
                 if (selected === task.correctAnswer) cls += ' correct';
                 else cls += ' wrong';
@@ -328,9 +327,8 @@
             if (isExtra) extraAnswers[taskId] = selected;
             else examAnswers[taskId] = selected;
 
-            // Подсвечиваем выбранный ответ серым сразу
             document.querySelectorAll('.answer-btn').forEach(b => {
-                b.classList.remove('exam'); // убираем с остальных
+                b.classList.remove('exam');
                 if (b.dataset.answer === selected) b.classList.add('exam');
             });
 
@@ -415,13 +413,11 @@
             const failedThemeCount = Object.values(stats.themeErrors).filter(c => c > 0).length;
             const failedTotal = stats.totalErrors > 2;
 
-            console.log(failedTheme);
-            console.log(failedTotal);
-            console.log(failedThemeCount);
+            console.log("failedTheme: " + failedTheme);
+            console.log("failedThemeCount: " + failedThemeCount);
+            console.log("failedTotal: " + failedTotal);
             
-
-
-            if (!(failedTheme || failedTotal) && failedThemeCount <= 2 && stats.totalErrors >= 1 && extraQuestions.length === 0) {
+            if (!failedTheme && !failedTotal && failedThemeCount <= 2 && stats.totalErrors >= 1 && extraQuestions.length === 0) {
                 extraQuestions = [];
                 for (let themeId in stats.themeErrors) {
                     const extra = additionalQuestions[themeId]?.slice(0, 5);
@@ -449,7 +445,7 @@
     function finishExam() {
         finished = true;
 
-        if (examTimer) clearInterval(examTimer); // остановим таймер
+        if (examTimer) clearInterval(examTimer);
 
         const allAnswers = {...examAnswers, ...extraAnswers};
         const themeErrors = {};
@@ -468,7 +464,6 @@
 
         showModal((totalErrors > 2 || failedTheme) ? "Экзамен не сдан" : "Экзамен сдан", `Всего ошибок: ${totalErrors}`);
 
-        // Подсвечиваем все ответы правильными/неправильными
         document.querySelectorAll('.answer-btn').forEach(btn => {
             const taskId = btn.dataset.taskId;
             const selected = allAnswers[taskId];
@@ -542,7 +537,7 @@
             + `?themeId=${themeId}&testType=${testType}`;
     }
 
-    let examTimer; // сохраняем ссылку на интервал
+    let examTimer;
 
     if (testType === 'Exam') {
         let seconds = 20 * 60;
@@ -554,7 +549,7 @@
             if (seconds <= 0) {
                 clearInterval(examTimer);
                 finished = true;
-                finishExam(); // вызываем finishExam, чтобы подсветить ответы
+                finishExam();
             }
         }, 1000);
     }
