@@ -53,8 +53,21 @@
         line-height: 1.5;
         margin-bottom: 15px;
         white-space: pre-line;
+
+        max-height: 300px;   
+        overflow-y: auto;    
+        padding-right: 5px;  
     }
 
+    .material-text::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .material-text::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+    
     .material-footer {
         display: flex;
         justify-content: space-between;
