@@ -6,7 +6,7 @@ namespace WebApi.Infrastructure.Components;
 
 public class DatabaseContext(string connectionString) : DbContext
 {
-    public DatabaseContext() : this("Server=localhost;Port=5434;User Id=postgres;Password=12345;Database=xamarinDb")
+    public DatabaseContext() : this("Server=localhost;Port=5434;Database=trafficCodeDb;Username=postgres;Password=1234")
     {
     }
 

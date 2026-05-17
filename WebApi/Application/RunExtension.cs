@@ -1,5 +1,4 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -168,5 +167,27 @@ public static class RunExtension
         {
             Console.WriteLine(ex.Message);
         }
+    }
+
+    public static async Task CustomOperations(this WebApplication app)
+    {
+        var shouldHash = Environment.GetEnvironmentVariable("HASH_PASSWORDS") ?? "false";
+        
+        if (shouldHash == "false") return;
+        
+        using var scope = app.Services.CreateScope();
+
+        var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+
+        var users = await db.Users.ToListAsync();
+
+        foreach (var user in users)
+        {
+            if (user.Password.Length >= 12) continue;
+            
+            user.Password = PasswordService.HashPassword(user.Password);
+        }
+
+        await db.SaveChangesAsync();
     }
 }

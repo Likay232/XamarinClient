@@ -14,4 +14,6 @@ var app = builder.Build();
 
 app.MappingEndpoints();
 
+await app.CustomOperations();
+
 app.Run();

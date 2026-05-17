@@ -85,10 +85,12 @@ public class AuthService(DataComponent component)
         else
         {
             user = component.Users.FirstOrDefault(u =>
-                u.Username == request.UserName && u.Password == request.Password);
+                u.Username == request.UserName);
 
             if (user == null || user.IsBlocked)
                 return null;
+
+            if (!PasswordService.VerifyPassword(user.Password, request.Password)) return null;
 
             role = "Client";
             userId = user.Id;
@@ -136,7 +138,7 @@ public class AuthService(DataComponent component)
             FirstName = request.FirstName,
             LastName = request.LastName,
             Username = request.Username,
-            Password = request.Password,
+            Password = PasswordService.HashPassword(request.Password),
             LastLogin = DateTime.MaxValue
         };
 
